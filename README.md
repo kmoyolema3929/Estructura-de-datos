@@ -73,6 +73,9 @@ Contiene las tareas asignadas durante el segundo parcial:
 
 * Java
 * C++
+* Html5
+* Css3
+* JavaScript
 * Git
 * GitHub
 
