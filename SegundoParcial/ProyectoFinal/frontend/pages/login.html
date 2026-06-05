@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartCampus UTA — Iniciar Sesión</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root { --red-900:#7B0D1E; --red-800:#9B1226; --red-700:#B91C31; --red-600:#C0392B; --red-100:#FCE8E6; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Inter',sans-serif; background:#F7F7F7; min-height:100vh; }
+
+    .navbar {
+      position:fixed; top:0; left:0; right:0; height:64px;
+      background:rgba(13,6,7,0.95); backdrop-filter:blur(12px);
+      display:flex; align-items:center; padding:0 48px; gap:20px;
+      z-index:100; border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .nav-brand-icon { width:36px;height:36px;background:var(--red-700);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px; }
+    .nav-brand-name { font-family:'Montserrat',sans-serif;font-weight:800;font-size:16px;color:#fff; }
+    .nav-brand-name span { color:#F4A09A; }
+    .nav-spacer { flex:1; }
+    .btn-nav { padding:8px 18px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:7px; transition:all .2s; }
+    .btn-nav-outline { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:#fff; }
+    .btn-nav-outline:hover { background:rgba(255,255,255,0.15); }
+    .btn-nav-solid { background:var(--red-700); border:none; color:#fff; }
+    .btn-nav-solid:hover { background:var(--red-800); }
+
+    .main { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:100px 24px 40px; }
+    .card { background:#fff; border-radius:18px; width:100%; max-width:440px; padding:42px 40px; box-shadow:0 8px 40px rgba(0,0,0,0.09); border:1px solid #EEE; }
+    .card-icon { width:56px;height:56px;background:var(--red-100);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--red-700);margin:0 auto 20px; }
+    .card-title { font-family:'Montserrat',sans-serif;font-size:24px;font-weight:800;color:#1a0b0d;text-align:center;margin-bottom:6px; }
+    .card-sub { font-size:13px;color:#999;text-align:center;margin-bottom:32px; }
+
+    .form-group { margin-bottom:18px; }
+    .form-group label { display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:7px; }
+    .input-wrap { position:relative; }
+    .input-wrap i { position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#bbb;font-size:14px; }
+    .form-control { width:100%;padding:11px 14px 11px 42px; border:1.5px solid #E5E5E5;border-radius:10px; font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:.2s; color:#1a0b0d;background:#FAFAFA; }
+    .form-control:focus { border-color:var(--red-600);background:#fff;box-shadow:0 0 0 3px var(--red-100); }
+
+    .form-forgot { text-align:right;margin-top:-10px;margin-bottom:18px; }
+    .form-forgot a { font-size:12px;color:var(--red-600);text-decoration:none;font-weight:500; }
+    .form-forgot a:hover { text-decoration:underline; }
+
+    .btn-submit { width:100%;background:linear-gradient(135deg,var(--red-700),var(--red-900)); color:#fff;border:none;border-radius:10px; padding:13px;font-size:14px;font-weight:700; font-family:'Montserrat',sans-serif;cursor:pointer; transition:.2s;letter-spacing:0.3px; display:flex;align-items:center;justify-content:center;gap:9px; }
+    .btn-submit:hover { opacity:.92;transform:translateY(-1px);box-shadow:0 6px 20px rgba(155,18,38,.35); }
+
+    .divider { display:flex;align-items:center;gap:12px;margin:22px 0; }
+    .divider::before,.divider::after { content:'';flex:1;height:1px;background:#EEE; }
+    .divider span { font-size:12px;color:#bbb;font-weight:500; }
+
+    .link-register { text-align:center;font-size:13px;color:#888;margin-top:20px; }
+    .link-register a { color:var(--red-600);font-weight:600;text-decoration:none; }
+    .link-register a:hover { text-decoration:underline; }
+
+    .error-msg { color:#C0392B;font-size:12px;margin-top:5px;display:none; }
+
+    .input-wrap .toggle-pass { position:absolute;right:14px;top:50%;transform:translateY(-50%); background:none;border:none;cursor:pointer;color:#bbb;font-size:14px; transition:.2s; }
+    .input-wrap .toggle-pass:hover { color:var(--red-600); }
+    .form-control.with-toggle { padding-right:42px; }
+
+    .toast { position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.2);color:#fff;display:flex;align-items:center;gap:10px;animation:toastIn .3s ease; }
+    @keyframes toastIn { from{transform:translateX(40px);opacity:0} to{opacity:1;transform:none} }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../index.html" class="nav-brand">
+    <div class="nav-brand-icon"><i class="fas fa-university"></i></div>
+    <div class="nav-brand-name">Smart<span>Campus</span> UTA</div>
+  </a>
+  <div class="nav-spacer"></div>
+  <div class="nav-actions">
+    <a href="../index.html" class="btn-nav btn-nav-outline"><i class="fas fa-home"></i> Inicio</a>
+    <a href="register.html" class="btn-nav btn-nav-solid"><i class="fas fa-user-plus"></i> Registrarse</a>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="card">
+    <div class="card-icon"><i class="fas fa-lock"></i></div>
+    <h1 class="card-title">Iniciar Sesión</h1>
+    <p class="card-sub">Ingresa con tu cuenta institucional UTA</p>
+
+    <div class="form-group">
+      <label>Correo institucional</label>
+      <div class="input-wrap">
+        <i class="fas fa-envelope"></i>
+        <input class="form-control" type="email" id="loginEmail" placeholder="usuario@uta.edu.ec"/>
+      </div>
+      <div class="error-msg" id="emailError">Correo no registrado o incorrecto</div>
+    </div>
+
+    <div class="form-group">
+      <label>Contraseña</label>
+      <div class="input-wrap">
+        <i class="fas fa-lock"></i>
+        <input class="form-control with-toggle" type="password" id="loginPass" placeholder="••••••••"/>
+        <button class="toggle-pass" onclick="togglePassword('loginPass', this)" type="button">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+      <div class="error-msg" id="passError">Contraseña incorrecta</div>
+    </div>
+
+    <div class="form-forgot"><a href="forgot-password.html">¿Olvidaste tu contraseña?</a></div>
+
+    <button class="btn-submit" onclick="doLogin()">
+      <i class="fas fa-sign-in-alt"></i> Ingresar al Sistema
+    </button>
+
+    <div class="divider"><span>¿No tienes cuenta?</span></div>
+    <div class="link-register">
+      <a href="register.html"><i class="fas fa-user-plus"></i> Crear una cuenta</a>
+    </div>
+  </div>
+</main>
+
+<!-- IMPORTANTE: Cargar los scripts en el orden correcto -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/config/supabase-config.js"></script>
+<script src="../js/utils/structures.js"></script>
+<script src="../js/services/data.js"></script>
+<script src="../js/services/auth.js"></script>
+
+<script>
+function showToast(msg, bg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.background = bg;
+  t.innerHTML = `<i class="fas ${bg === '#27AE60' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+
+// Verificar si ya hay sesión
+// Verificar sesión existente - redirigir si ya está logueado
+// Guard: solo redirigir si hay sesión Y no estamos ya en login
+if (sessionStorage.getItem('smartcampus_session') && !window.location.pathname.includes('login')) {
+  const user = JSON.parse(sessionStorage.getItem('smartcampus_session'));
+  const roleRedirects = {
+    'Administrador': 'admin.html',
+    'Secretaria': 'secretaria.html',
+    'Docente': 'docente.html',
+    'Estudiante': 'estudiante.html',
+    'Personal Administrativo': 'personal.html'
+  };
+  window.location.href = roleRedirects[user.rol] || '../index.html';
+}
+
+function togglePassword(id, btn) {
+  const input = document.getElementById(id);
+  const isPass = input.type === 'password';
+  input.type = isPass ? 'text' : 'password';
+  btn.querySelector('i').className = isPass ? 'fas fa-eye-slash' : 'fas fa-eye';
+}
+
+async function doLogin() {
+  let valid = true;
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+
+  document.getElementById('emailError').style.display = 'none';
+  document.getElementById('passError').style.display  = 'none';
+
+  if (!email || !email.endsWith('@uta.edu.ec')) {
+    document.getElementById('emailError').textContent = 'Ingresa un correo válido (@uta.edu.ec)';
+    document.getElementById('emailError').style.display = 'block'; 
+    valid = false;
+  }
+  if (!pass) {
+    document.getElementById('passError').style.display = 'block'; 
+    valid = false;
+  }
+  if (!valid) return;
+
+  // Verificar que Storage esté disponible
+  if (typeof AppStorage === 'undefined' || !AppStorage.login) {
+    showToast('Error: Sistema no inicializado. Recarga la página.', '#C0392B');
+    console.error('AppStorage no definido');
+    return;
+  }
+
+  try {
+    let result = null;
+
+    // Intentar con AppStorage (Supabase)
+    if (typeof AppStorage !== 'undefined' && AppStorage.login) {
+      result = await AppStorage.login(email, pass);
+    } else {
+      // Fallback directo a Supabase
+      const { data: userData, error } = await window.supabase
+        .from('usuario')
+        .select('*')
+        .eq('email', email)
+        .single();
+      if (error || !userData) throw new Error('Usuario no encontrado. Verifica tu email.');
+      if (userData.estado !== 'Activo') throw new Error('Tu cuenta está inactiva. Contacta al administrador.');
+
+      // Verificar contraseña (SHA-256, btoa o texto plano)
+      const enc = new TextEncoder();
+      const buf = await crypto.subtle.digest('SHA-256', enc.encode(pass));
+      const sha256 = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      const match = userData.password_hash === sha256
+                 || userData.password_hash === btoa(pass)
+                 || userData.password_hash === pass;
+      if (!match) throw new Error('Contraseña incorrecta.');
+
+      // Obtener nombre del rol
+      let rolNombre = 'Estudiante';
+      try {
+        const { data: rolData } = await window.supabase
+          .from('rol').select('nombre').eq('id_rol', userData.id_rol).single();
+        if (rolData?.nombre) rolNombre = rolData.nombre;
+      } catch(e) {
+        const rolMap = {1:'Administrador',2:'Secretaria',3:'Docente',4:'Estudiante',5:'Personal Administrativo'};
+        rolNombre = rolMap[userData.id_rol] || 'Estudiante';
+      }
+
+      result = {
+        token: btoa(email + ':' + Date.now()),
+        user: { id: userData.id_usuario, email: userData.email, nombre: userData.nombre, rol: rolNombre }
+      };
+    }
+
+    sessionStorage.setItem('smartcampus_session', JSON.stringify({
+      id:        result.user.id,
+      email:     result.user.email,
+      nombre:    result.user.nombre,
+      rol:       result.user.rol,
+      token:     result.token,
+      loginTime: new Date().toISOString()
+    }));
+
+    showToast('¡Bienvenido, ' + result.user.nombre + '!', '#27AE60');
+
+    setTimeout(() => {
+      const roleRedirects = {
+        'Administrador':          'admin.html',
+        'Secretaria':             'secretaria.html',
+        'Docente':                'docente.html',
+        'Estudiante':             'estudiante.html',
+        'Personal Administrativo':'personal.html'
+      };
+      window.location.href = roleRedirects[result.user.rol] || '../index.html';
+    }, 800);
+
+  } catch (error) {
+    console.error('Login error:', error);
+    showToast(error.message || 'Email o contraseña incorrectos', '#C0392B');
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

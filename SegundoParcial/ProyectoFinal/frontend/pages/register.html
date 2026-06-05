@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartCampus UTA — Registrarse</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/config/supabase-config.js"></script>
+  <script src="../js/utils/structures.js"></script>
+  <script src="../js/services/data.js"></script>
+  <script src="../js/services/auth.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    :root { --red-900:#7B0D1E;--red-800:#9B1226;--red-700:#B91C31;--red-600:#C0392B;--red-100:#FCE8E6; }
+    * { box-sizing:border-box;margin:0;padding:0; }
+    body { font-family:'Inter',sans-serif;background:#F7F7F7;min-height:100vh; }
+
+    .navbar {
+      position:fixed;top:0;left:0;right:0;height:64px;
+      background:rgba(13,6,7,0.95);backdrop-filter:blur(12px);
+      display:flex;align-items:center;padding:0 48px;gap:20px;
+      z-index:100;border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    .nav-brand { display:flex;align-items:center;gap:10px;text-decoration:none; }
+    .nav-brand-icon { width:36px;height:36px;background:var(--red-700);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px; }
+    .nav-brand-name { font-family:'Montserrat',sans-serif;font-weight:800;font-size:16px;color:#fff; }
+    .nav-brand-name span { color:#F4A09A; }
+    .nav-spacer { flex:1; }
+    .btn-nav { padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;transition:all .2s; }
+    .btn-nav-outline { background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff; }
+    .btn-nav-outline:hover { background:rgba(255,255,255,0.15); }
+    .btn-nav-solid { background:var(--red-700);border:none;color:#fff; }
+    .btn-nav-solid:hover { background:var(--red-800); }
+
+    .main { min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:90px 24px 40px; }
+
+    .stepper { display:flex;align-items:center;justify-content:center;margin-bottom:28px; }
+    .step { display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#bbb; }
+    .step.active { color:var(--red-700); }
+    .step.done   { color:#27AE60; }
+    .step-circle { width:30px;height:30px;border-radius:50%;border:2px solid #DDD;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#bbb;transition:.3s; }
+    .step.active .step-circle { border-color:var(--red-700);background:var(--red-700);color:#fff; }
+    .step.done   .step-circle { border-color:#27AE60;background:#27AE60;color:#fff; }
+    .step-line { width:48px;height:2px;background:#EEE;margin:0 8px; }
+    .step-line.done { background:#27AE60; }
+
+    .card { background:#fff;border-radius:18px;width:100%;max-width:480px;padding:38px 40px;box-shadow:0 8px 40px rgba(0,0,0,0.09);border:1px solid #EEE; }
+    .card-icon { width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 18px; }
+    .card-title { font-family:'Montserrat',sans-serif;font-size:22px;font-weight:800;color:#1a0b0d;text-align:center;margin-bottom:5px; }
+    .card-sub { font-size:13px;color:#999;text-align:center;margin-bottom:26px;line-height:1.5; }
+
+    .form-row { display:flex;gap:14px; }
+    .form-row .form-group { flex:1; }
+    .form-group { margin-bottom:15px; }
+    .form-group label { display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:6px; }
+    .input-wrap { position:relative; }
+    .input-wrap .icon { position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#bbb;font-size:13px;pointer-events:none; }
+    .form-control { width:100%;padding:10px 13px 10px 38px;border:1.5px solid #E5E5E5;border-radius:9px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:.2s;color:#1a0b0d;background:#FAFAFA; }
+    .form-control:focus { border-color:var(--red-600);background:#fff;box-shadow:0 0 0 3px var(--red-100); }
+    .form-control.is-error { border-color:#E74C3C;background:#FEF5F4; }
+    .form-control.is-valid { border-color:#27AE60;background:#F0FBF5; }
+    select.form-control { appearance:none;cursor:pointer; }
+    .toggle-pass { position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#bbb;font-size:13px;transition:.2s; }
+    .toggle-pass:hover { color:var(--red-600); }
+    .with-toggle { padding-right:38px; }
+    .email-domain { position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:#bbb;pointer-events:none; }
+
+    .err-msg { color:#C0392B;font-size:11px;margin-top:4px;display:none;align-items:center;gap:4px; }
+    .err-msg.show { display:flex; }
+    .ok-msg  { color:#27AE60;font-size:11px;margin-top:4px;display:none;align-items:center;gap:4px; }
+    .ok-msg.show  { display:flex; }
+
+    .pass-reqs { margin-top:7px;display:none; }
+    .pass-reqs.show { display:block; }
+    .req { display:flex;align-items:center;gap:7px;font-size:11px;color:#bbb;margin-bottom:2px;transition:.2s; }
+    .req.ok { color:#27AE60; }
+    .req i { width:13px; }
+
+    .btn-submit { width:100%;background:linear-gradient(135deg,var(--red-700),var(--red-900));color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;font-family:'Montserrat',sans-serif;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:9px;margin-top:6px; }
+    .btn-submit:hover:not(:disabled) { opacity:.92;transform:translateY(-1px);box-shadow:0 6px 20px rgba(155,18,38,.35); }
+    .btn-submit:disabled { opacity:.55;cursor:not-allowed; }
+
+    .code-grid { display:flex;gap:10px;justify-content:center;margin:22px 0; }
+    .code-box { width:46px;height:54px;border:2px solid #DDD;border-radius:10px;font-size:22px;font-weight:700;text-align:center;font-family:'Montserrat',sans-serif;color:#1a0b0d;outline:none;transition:.2s;background:#FAFAFA; }
+    .code-box:focus { border-color:var(--red-700);background:#fff;box-shadow:0 0 0 3px var(--red-100); }
+    .code-box.filled { border-color:var(--red-600);background:var(--red-100); }
+    .code-box.is-error { border-color:#E74C3C;background:#FEF5F4;animation:shake .3s ease; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+    .spinner { width:18px;height:18px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:none; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    .terms { font-size:11px;color:#aaa;text-align:center;margin-top:12px;line-height:1.5; }
+    .terms a { color:var(--red-600);text-decoration:none; }
+    .link-login { text-align:center;font-size:13px;color:#888;margin-top:16px; }
+    .link-login a { color:var(--red-600);font-weight:600;text-decoration:none; }
+
+    .toast { position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.2);color:#fff;display:flex;align-items:center;gap:10px;animation:toastIn .3s ease; }
+    @keyframes toastIn { from{transform:translateX(40px);opacity:0} to{opacity:1;transform:none} }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../index.html" class="nav-brand">
+    <div class="nav-brand-icon"><i class="fas fa-university"></i></div>
+    <div class="nav-brand-name">Smart<span>Campus</span> UTA</div>
+  </a>
+  <div class="nav-spacer"></div>
+  <div class="nav-actions" style="display:flex;gap:10px">
+    <a href="../index.html" class="btn-nav btn-nav-outline"><i class="fas fa-home"></i> Inicio</a>
+    <a href="login.html"   class="btn-nav btn-nav-solid"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>
+  </div>
+</nav>
+
+<main class="main">
+
+  <div style="width:100%;max-width:480px">
+    <div class="stepper">
+      <div class="step active" id="step1"><div class="step-circle">1</div><span>Datos personales</span></div>
+      <div class="step-line" id="line1"></div>
+      <div class="step" id="step2"><div class="step-circle">2</div><span>Verificar correo</span></div>
+      <div class="step-line" id="line2"></div>
+      <div class="step" id="step3"><div class="step-circle">3</div><span>Completado</span></div>
+    </div>
+
+    <!-- PASO 1: Datos -->
+    <div class="card" id="cardStep1">
+      <div class="card-icon" style="background:var(--red-100);color:var(--red-700)"><i class="fas fa-user-plus"></i></div>
+      <h1 class="card-title">Crear cuenta</h1>
+      <p class="card-sub">Solo se aceptan correos <strong>@uta.edu.ec</strong></p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombres</label>
+          <div class="input-wrap">
+            <i class="icon fas fa-user"></i>
+            <input class="form-control" type="text" id="nombres" placeholder="Ej: Juan Carlos"/>
+          </div>
+          <div class="err-msg" id="err-nombres"><i class="fas fa-exclamation-circle"></i> Campo requerido</div>
+        </div>
+        <div class="form-group">
+          <label>Apellidos</label>
+          <div class="input-wrap">
+            <i class="icon fas fa-user"></i>
+            <input class="form-control" type="text" id="apellidos" placeholder="Ej: Pérez Mora"/>
+          </div>
+          <div class="err-msg" id="err-apellidos"><i class="fas fa-exclamation-circle"></i> Campo requerido</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Usuario de correo institucional</label>
+        <div class="input-wrap">
+          <i class="icon fas fa-envelope"></i>
+          <input class="form-control" type="text" id="emailUser" placeholder="tucorreo" oninput="checkEmail(this)"/>
+          <span class="email-domain">@uta.edu.ec</span>
+        </div>
+        <div class="err-msg" id="err-email"><i class="fas fa-exclamation-circle"></i> Solo letras, números, puntos o guiones</div>
+        <div class="ok-msg"  id="ok-email"><i class="fas fa-check-circle"></i> Correo institucional válido</div>
+      </div>
+
+      <div class="form-group">
+        <label>Rol en la institución</label>
+        <div class="input-wrap">
+          <i class="icon fas fa-id-badge"></i>
+          <select class="form-control" id="rol">
+            <option value="">Selecciona tu rol</option>
+            <option>Estudiante</option>
+            <option>Docente</option>
+            <option>Personal Administrativo</option>
+          </select>
+        </div>
+        <div class="err-msg" id="err-rol"><i class="fas fa-exclamation-circle"></i> Selecciona un rol</div>
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña</label>
+        <div class="input-wrap">
+          <i class="icon fas fa-lock"></i>
+          <input class="form-control with-toggle" type="password" id="pass1" placeholder="Mínimo 8 caracteres" oninput="checkPass()"/>
+          <button class="toggle-pass" onclick="togglePass('pass1',this)" type="button"><i class="fas fa-eye"></i></button>
+        </div>
+       <div class="pass-reqs" id="passReqs">
+          <div class="req" id="req-len">
+            <i class="fas fa-circle"></i>
+            Mínimo 8 caracteres
+          </div>
+          <div class="req" id="req-upper">
+            <i class="fas fa-circle"></i>
+            Al menos una mayúscula
+          </div>
+          <div class="req" id="req-lower">
+            <i class="fas fa-circle"></i>
+            Al menos una minúscula
+          </div>
+          <div class="req" id="req-num">
+            <i class="fas fa-circle"></i>
+            Al menos un número
+          </div>
+          <div class="req" id="req-special">
+            <i class="fas fa-circle"></i>
+            Al menos un símbolo (!@#$%^&*)
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Confirmar contraseña</label>
+        <div class="input-wrap">
+          <i class="icon fas fa-lock"></i>
+          <input class="form-control with-toggle" type="password" id="pass2" placeholder="Repite la contraseña"/>
+          <button class="toggle-pass" onclick="togglePass('pass2',this)" type="button"><i class="fas fa-eye"></i></button>
+        </div>
+        <div class="err-msg" id="err-pass2"><i class="fas fa-exclamation-circle"></i> Las contraseñas no coinciden</div>
+      </div>
+
+      <button class="btn-submit" id="btnStep1" onclick="goStep2()">
+        <i class="fas fa-arrow-right"></i> Continuar y verificar correo
+      </button>
+      <p class="terms">Al registrarte aceptas los <a href="#">Términos de uso</a> y la <a href="#">Política de privacidad</a>.</p>
+      <div class="link-login">¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></div>
+    </div>
+
+    <!-- PASO 2: Verificar -->
+    <div class="card" id="cardStep2" style="display:none">
+      <div class="card-icon" style="background:#E3F9EE;color:#27AE60"><i class="fas fa-envelope-open-text"></i></div>
+      <h1 class="card-title">Verifica tu correo</h1>
+      <p class="card-sub">Enviamos un código de 6 dígitos a<br><strong id="emailDestino"></strong></p>
+
+      <div class="code-grid" id="codeGrid">
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1" oninput="moveNext(this,1)" onkeydown="movePrev(event,this,0)"/>
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1" oninput="moveNext(this,2)" onkeydown="movePrev(event,this,1)"/>
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1" oninput="moveNext(this,3)" onkeydown="movePrev(event,this,2)"/>
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1" oninput="moveNext(this,4)" onkeydown="movePrev(event,this,3)"/>
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1" oninput="moveNext(this,5)" onkeydown="movePrev(event,this,4)"/>
+        <input class="code-box" type="text" inputmode="numeric" maxlength="1" oninput="moveNext(this,6)" onkeydown="movePrev(event,this,5)"/>
+      </div>
+
+      <div style="text-align:center;font-size:11px;color:#F39C12;margin-bottom:10px" id="codigoExpiraMsg"></div>
+
+      <div class="err-msg" id="err-code" style="justify-content:center;margin-bottom:12px">
+        <i class="fas fa-exclamation-circle"></i> Código incorrecto o expirado
+      </div>
+
+      <button class="btn-submit" onclick="verifyCode()">
+        <span id="verifyLabel"><i class="fas fa-check-circle"></i> Verificar código</span>
+        <div class="spinner" id="verifySpinner"></div>
+      </button>
+
+      <div style="text-align:center;margin-top:18px">
+        <span style="font-size:13px;color:#aaa">¿No recibiste el código?</span>
+        <button id="resendBtn" onclick="resendCode()" style="background:none;border:none;color:var(--red-600);font-size:13px;font-weight:600;cursor:pointer;margin-left:6px">
+          Reenviar
+        </button>
+        <span id="resendTimer" style="font-size:13px;color:#aaa;display:none"> (espera <span id="timerCount">60</span>s)</span>
+      </div>
+
+      <div style="text-align:center;margin-top:12px">
+        <button onclick="goBack()" style="background:none;border:none;color:#aaa;font-size:12px;cursor:pointer">
+          <i class="fas fa-arrow-left"></i> Volver y corregir datos
+        </button>
+      </div>
+    </div>
+
+    <!-- PASO 3: Éxito -->
+    <div class="card" id="cardStep3" style="display:none;text-align:center">
+      <div style="font-size:60px;margin-bottom:14px">🎉</div>
+      <h1 class="card-title">¡Cuenta creada!</h1>
+      <p class="card-sub" style="margin-bottom:24px">Tu cuenta institucional ha sido verificada y activada exitosamente.</p>
+      <div style="background:#E3F9EE;border:1px solid #A8E6C3;border-radius:10px;padding:14px;margin-bottom:22px;text-align:left">
+        <div style="font-size:13px;color:#1a6b3c;display:flex;flex-direction:column;gap:6px">
+          <span><i class="fas fa-check-circle" style="color:#27AE60;margin-right:6px"></i> Correo verificado</span>
+          <span><i class="fas fa-check-circle" style="color:#27AE60;margin-right:6px"></i> Cuenta activa</span>
+          <span><i class="fas fa-check-circle" style="color:#27AE60;margin-right:6px"></i> Listo para ingresar</span>
+        </div>
+      </div>
+      <a href="login.html" class="btn-submit" style="text-decoration:none">
+        <i class="fas fa-sign-in-alt"></i> Ir a Iniciar Sesión
+      </a>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Permitir pegar código completo
+  function setupPasteCode() {
+    const codeBoxes = document.querySelectorAll('.code-box');
+    const firstBox = codeBoxes[0];
+    
+    if (firstBox) {
+      firstBox.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        const numbers = paste.replace(/\D/g, '').slice(0, 6);
+        
+        for (let i = 0; i < numbers.length && i < codeBoxes.length; i++) {
+          codeBoxes[i].value = numbers[i];
+          codeBoxes[i].classList.add('filled');
+        }
+        
+        // Enfocar el siguiente cuadro vacío o el último si está lleno
+        const nextEmpty = Array.from(codeBoxes).find(box => !box.value);
+        if (nextEmpty) {
+          nextEmpty.focus();
+        } else if (numbers.length === 6) {
+          setTimeout(() => verifyCode(), 100);
+        }
+      });
+    }
+  }
+  // Configuración EMAILJS
+  const EMAILJS_SERVICE_ID  = 'service_cxius7q';  
+  const EMAILJS_TEMPLATE_ID = 'template_e799igy';  
+  const EMAILJS_PUBLIC_KEY  = 'xI_GJK-DFfyE3BUs3';  
+
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  let codigoGenerado = '';
+  let codigoExpiracion = null;
+  let emailCompleto  = '';
+  let nombreUsuario  = '';
+  let rolUsuario     = '';
+  let timerInterval  = null;
+  let expiraInterval = null;
+
+  function checkEmail(inp) {
+    const val = inp.value.trim();
+    const valido = /^[a-zA-Z0-9._-]+$/.test(val) && val.length >= 3;
+    inp.classList.toggle('is-error', val && !valido);
+    inp.classList.toggle('is-valid', valido);
+    showEl('err-email', val && !valido);
+    showEl('ok-email',  valido);
+  }
+
+  function checkPass() {
+
+    const v = document.getElementById('pass1').value;
+
+    document.getElementById('passReqs')
+      .classList.add('show');
+
+    // mínimo 8 caracteres
+    setReq('req-len', v.length >= 8);
+
+    // mayúscula
+    setReq('req-upper', /[A-Z]/.test(v));
+
+    // minúscula
+    setReq('req-lower', /[a-z]/.test(v));
+
+    // número
+    setReq('req-num', /[0-9]/.test(v));
+
+    // símbolo
+    setReq(
+      'req-special',
+      /[!@#$%^&*(),.?":{}|<>]/.test(v)
+    );
+  }
+
+  function setReq(id, ok) {
+    const el = document.getElementById(id);
+    el.classList.toggle('ok', ok);
+    el.querySelector('i').className = ok ? 'fas fa-check-circle' : 'fas fa-circle';
+  }
+
+  function togglePass(id, btn) {
+    const inp = document.getElementById(id);
+    const vis = inp.type === 'password';
+    inp.type = vis ? 'text' : 'password';
+    btn.querySelector('i').className = vis ? 'fas fa-eye-slash' : 'fas fa-eye';
+  }
+
+  function showEl(id, condition) {
+    document.getElementById(id).classList.toggle('show', condition);
+  }
+
+  function actualizarMensajeExpiracion() {
+    const msgEl = document.getElementById('codigoExpiraMsg');
+    if (!codigoExpiracion) {
+      msgEl.style.display = 'none';
+      return;
+    }
+    const ahora = Date.now();
+    const restante = Math.max(0, Math.floor((codigoExpiracion - ahora) / 1000));
+    if (restante <= 0) {
+      msgEl.textContent = '⚠️ El código ha expirado. Solicita uno nuevo.';
+      msgEl.style.display = 'block';
+      msgEl.style.color = '#E74C3C';
+    } else {
+      msgEl.textContent = `⏱ El código expira en ${restante} segundos`;
+      msgEl.style.display = 'block';
+      msgEl.style.color = '#F39C12';
+    }
+  }
+
+  function iniciarContadorExpiracion() {
+    if (expiraInterval) clearInterval(expiraInterval);
+    expiraInterval = setInterval(() => {
+      if (!codigoExpiracion) {
+        if (expiraInterval) clearInterval(expiraInterval);
+        return;
+      }
+      const ahora = Date.now();
+      if (ahora >= codigoExpiracion) {
+        document.querySelectorAll('.code-box').forEach(b => {
+          b.classList.add('is-error');
+          b.disabled = true;
+        });
+        if (expiraInterval) clearInterval(expiraInterval);
+        expiraInterval = null;
+        actualizarMensajeExpiracion();
+      } else {
+        actualizarMensajeExpiracion();
+      }
+    }, 1000);
+  }
+
+  async function goStep2() {
+    const nombres   = document.getElementById('nombres').value.trim();
+    const apellidos = document.getElementById('apellidos').value.trim();
+    const emailUser = document.getElementById('emailUser').value.trim();
+    const rol       = document.getElementById('rol').value;
+    const pass1     = document.getElementById('pass1').value;
+    const pass2     = document.getElementById('pass2').value;
+
+    let ok = true;
+    showEl('err-nombres',   !nombres);   if (!nombres)   ok = false;
+    showEl('err-apellidos', !apellidos); if (!apellidos) ok = false;
+
+    const emailOk = /^[a-zA-Z0-9._-]+$/.test(emailUser) && emailUser.length >= 3;
+    showEl('err-email', !emailOk); if (!emailOk) ok = false;
+
+    showEl('err-rol', !rol); if (!rol) ok = false;
+
+    // ── VALIDACIÓN ESTRICTA DE CONTRASEÑA ──────────────────────
+    const passReqs = {
+      len:     pass1.length >= 8,
+      upper:   /[A-Z]/.test(pass1),
+      lower:   /[a-z]/.test(pass1),
+      num:     /[0-9]/.test(pass1),
+      special: /[^A-Za-z0-9]/.test(pass1),
+    };
+    const passOk = Object.values(passReqs).every(Boolean);
+
+    // Mostrar requisitos con estado actual
+    document.getElementById('passReqs').classList.add('show');
+    setReq('req-len',     passReqs.len);
+    setReq('req-upper',   passReqs.upper);
+    setReq('req-lower',   passReqs.lower);
+    setReq('req-num',     passReqs.num);
+    setReq('req-special', passReqs.special);
+
+    if (!passOk) {
+      // Resaltar campo con error
+      document.getElementById('pass1').classList.add('is-error');
+      showToast('La contraseña no cumple todos los requisitos', '#C0392B');
+      ok = false;
+    } else {
+      document.getElementById('pass1').classList.remove('is-error');
+    }
+
+    // Confirmar contraseñas coinciden
+    const passMatch = pass1 === pass2;
+    showEl('err-pass2', !passMatch);
+    if (!passMatch) {
+      document.getElementById('pass2').classList.add('is-error');
+      ok = false;
+    } else {
+      document.getElementById('pass2').classList.remove('is-error');
+    }
+
+    if (!ok) return;
+
+    emailCompleto = emailUser + '@uta.edu.ec';
+    nombreUsuario = nombres + ' ' + apellidos;
+    rolUsuario = rol;
+    
+    codigoGenerado = String(Math.floor(100000 + Math.random() * 900000));
+    codigoExpiracion = Date.now() + (2 * 60 * 1000);
+    
+    document.getElementById('emailDestino').textContent = emailCompleto;
+    
+    document.querySelectorAll('.code-box').forEach(b => {
+      b.disabled = false;
+      b.value = '';
+      b.classList.remove('is-error', 'filled');
+    });
+
+    const btn = document.getElementById('btnStep1');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="display:block"></div> Enviando código...';
+
+    const enviado = await enviarCodigo();
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-arrow-right"></i> Continuar y verificar correo';
+
+    if (!enviado) return;
+
+    document.getElementById('cardStep1').style.display = 'none';
+    document.getElementById('cardStep2').style.display = 'block';
+    setStep(2);
+    
+    startTimer();
+    iniciarContadorExpiracion();
+    setupPasteCode();
+    
+    document.querySelectorAll('.code-box')[0].focus();
+  }
+
+  async function enviarCodigo() {
+    try {
+      const result = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          to_email: emailCompleto,
+          email:    emailCompleto,
+          nombre:   nombreUsuario,
+          passcode: codigoGenerado,
+        }
+      );
+      if (result.status === 200) {
+        showToast('Código enviado a ' + emailCompleto, '#27AE60');
+        return true;
+      } else {
+        showToast('No se pudo enviar el correo', '#C0392B');
+        return false;
+      }
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      showToast(' Error al enviar: ' + (err.text || err.message), '#C0392B');
+      return false;
+    }
+  }
+
+  function moveNext(input, next) {
+    input.value = input.value.replace(/\D/g, '');
+    input.classList.toggle('filled', !!input.value);
+    
+    if (input.value && next <= 6) {
+      const nextInput = document.querySelectorAll('.code-box')[next - 1];
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+    
+    const allBoxes = document.querySelectorAll('.code-box');
+    const allFilled = Array.from(allBoxes).every(box => box.value.length === 1);
+    
+    if (allFilled) {
+      setTimeout(() => {
+        verifyCode();
+      }, 100);
+    }
+  }
+  
+  function movePrev(e, input, prev) {
+    if (e.key === 'Backspace' && !input.value && prev >= 0) {
+      const prevInput = document.querySelectorAll('.code-box')[prev - 1];
+      if (prevInput) {
+        prevInput.focus();
+        prevInput.value = ''; // Limpiar el anterior también
+        prevInput.classList.remove('filled');
+      }
+    }
+  }
+
+    async function verifyCode() {
+    if (!codigoExpiracion || Date.now() > codigoExpiracion) {
+      document.querySelectorAll('.code-box').forEach(b => b.classList.add('is-error'));
+      showEl('err-code', true);
+      document.getElementById('err-code').innerHTML = '<i class="fas fa-exclamation-circle"></i> El código ha expirado. Solicita uno nuevo.';
+      return;
+    }
+
+    const boxes = document.querySelectorAll('.code-box');
+    const codigo = Array.from(boxes).map(b => b.value).join('');
+    if (codigo.length < 6) { 
+      boxes.forEach(b => { if (!b.value) b.classList.add('is-error'); }); 
+      return; 
+    }
+
+    document.getElementById('verifyLabel').style.display = 'none';
+    document.getElementById('verifySpinner').style.display = 'block';
+
+    setTimeout(async () => {
+      document.getElementById('verifyLabel').style.display = 'flex';
+      document.getElementById('verifySpinner').style.display = 'none';
+
+      if (codigo === codigoGenerado && Date.now() <= codigoExpiracion) {
+        clearInterval(timerInterval);
+        if (expiraInterval) clearInterval(expiraInterval);
+        
+        const pass1 = document.getElementById('pass1').value;
+        
+        // Usar Storage.register en lugar de guardar manualmente
+        try {
+          const result = await Storage.register({
+            nombre: nombreUsuario,
+            email: emailCompleto,
+            password: pass1,
+            rol: rolUsuario
+          });
+          
+          showToast('¡Cuenta creada exitosamente! Redirigiendo al login...', '#27AE60');
+          
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 2000);
+          
+        } catch (error) {
+          showToast(error.message, '#C0392B');
+          document.getElementById('cardStep2').style.display = 'none';
+          document.getElementById('cardStep1').style.display = 'block';
+          setStep(1);
+        }
+        
+      } else if (Date.now() > codigoExpiracion) {
+        boxes.forEach(b => b.classList.add('is-error'));
+        showEl('err-code', true);
+        document.getElementById('err-code').innerHTML = '<i class="fas fa-exclamation-circle"></i> El código ha expirado. Solicita uno nuevo.';
+      } else {
+        boxes.forEach(b => { b.classList.add('is-error'); b.value = ''; b.classList.remove('filled'); });
+        showEl('err-code', true);
+        document.getElementById('err-code').innerHTML = '<i class="fas fa-exclamation-circle"></i> Código incorrecto. Inténtalo de nuevo.';
+        boxes[0].focus();
+        setTimeout(() => { boxes.forEach(b => b.classList.remove('is-error')); showEl('err-code', false); }, 2500);
+      }
+    }, 900);
+  }
+
+  async function resendCode() {
+    codigoGenerado = String(Math.floor(100000 + Math.random() * 900000));
+    codigoExpiracion = Date.now() + (2 * 60 * 1000);
+    
+    document.querySelectorAll('.code-box').forEach(b => {
+      b.value = '';
+      b.classList.remove('is-error', 'filled');
+      b.disabled = false;
+    });
+    
+    document.getElementById('resendBtn').style.display = 'none';
+    
+    const enviado = await enviarCodigo();
+    
+    if (enviado) {
+      if (timerInterval) clearInterval(timerInterval);
+      if (expiraInterval) clearInterval(expiraInterval);
+      startTimer();
+      iniciarContadorExpiracion();
+      showToast('Nuevo código enviado. Válido por 2 minutos.', '#27AE60');
+    } else {
+      document.getElementById('resendBtn').style.display = 'inline';
+    }
+  }
+
+  function startTimer() {
+    document.getElementById('resendBtn').style.display   = 'none';
+    document.getElementById('resendTimer').style.display = 'inline';
+    let s = 60;
+    document.getElementById('timerCount').textContent = s;
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      s--;
+      document.getElementById('timerCount').textContent = s;
+      if (s <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('resendBtn').style.display   = 'inline';
+        document.getElementById('resendTimer').style.display = 'none';
+      }
+    }, 1000);
+  }
+
+  function goBack() {
+    document.getElementById('cardStep2').style.display = 'none';
+    document.getElementById('cardStep1').style.display = 'block';
+    setStep(1);
+    clearInterval(timerInterval);
+    if (expiraInterval) clearInterval(expiraInterval);
+    codigoExpiracion = null;
+  }
+
+  function setStep(n) {
+    for (let i = 1; i <= 3; i++) {
+      const s = document.getElementById(`step${i}`);
+      s.classList.remove('active','done');
+      if (i < n)   s.classList.add('done');
+      if (i === n) s.classList.add('active');
+    }
+    for (let i = 1; i <= 2; i++)
+      document.getElementById(`line${i}`)?.classList.toggle('done', i < n);
+  }
+
+  function showToast(msg, bg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.style.background = bg;
+    t.innerHTML = `<i class="fas ${bg === '#27AE60' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4500);
+  }
+</script>
+</body>
+</html>

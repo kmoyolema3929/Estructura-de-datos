@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartCampus UTA</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Leaflet.js — OpenStreetMap -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .leaflet-container { font-family: 'Inter', sans-serif; }
+    .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+    .leaflet-tooltip { border-radius: 6px; font-size: 12px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="brand-icon"><i class="fas fa-university"></i></div>
+    <div class="brand-text">
+      <span class="brand-name">SmartCampus</span>
+      <span class="brand-sub">UTA · Universidad Técnica de Ambato</span>
+    </div>
+  </div>
+  <div class="navbar-center">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Buscar trámites, documentos, rutas..." id="globalSearch" />
+    </div>
+  </div>
+  <div class="navbar-actions">
+    <button class="btn-notif" id="notifBtn" title="Notificaciones">
+      <i class="fas fa-bell"></i>
+      <span class="notif-badge" id="notifCount">3</span>
+    </button>
+
+    <!-- PANEL DE NOTIFICACIONES -->
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-panel-header">
+        <span><i class="fas fa-bell"></i> Notificaciones</span>
+        <button class="notif-mark-all" id="markAllBtn">Marcar todas como leídas</button>
+      </div>
+      <div class="notif-list" id="notifList">
+        <div class="notif-empty">
+          <i class="fas fa-bell-slash"></i>
+          Sin notificaciones nuevas
+        </div>
+      </div>
+      <div class="notif-panel-footer">
+        <button onclick="document.querySelectorAll('.nav-item[data-page=historial]')[0].click(); closeNotifPanel()">
+          <i class="fas fa-history"></i> Ver historial completo
+        </button>
+      </div>
+    </div>
+    <div class="user-pill" id="userMenu">
+      <div class="user-avatar">AS</div>
+      <div class="user-info">
+        <span class="user-name">Admin Sistema</span>
+        <span class="user-role">Administrador</span>
+      </div>
+      <i class="fas fa-chevron-down"></i>
+    </div>
+    <button class="btn-logout" id="logoutBtn" title="Cerrar sesión"><i class="fas fa-sign-out-alt"></i></button>
+  </div>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <span class="nav-label">Principal</span>
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <i class="fas fa-th-large"></i><span>Pagina Principal</span>
+      </a>
+      <a href="#" class="nav-item" data-page="turnos">
+        <i class="fas fa-ticket-alt"></i><span>Cola de Turnos</span>
+        <span class="badge-nav" id="turnosBadge">0</span>
+      </a>
+      <a href="#" class="nav-item" data-page="tramites">
+        <i class="fas fa-file-alt"></i><span>Trámites</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <span class="nav-label">Gestión</span>
+      <a href="#" class="nav-item" data-page="documentos">
+        <i class="fas fa-folder-open"></i><span>Documentos</span>
+      </a>
+      <a href="#" class="nav-item" data-page="rutas">
+        <i class="fas fa-map-marked-alt"></i><span>Mapa del Campus</span>
+      </a>
+      <a href="#" class="nav-item" data-page="historial">
+        <i class="fas fa-history"></i><span>Historial</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <span class="nav-label">Sistema</span>
+      <a href="#" class="nav-item" data-page="usuarios">
+        <i class="fas fa-users"></i><span>Usuarios</span>
+      </a>
+      <a href="#" class="nav-item" data-page="reportes">
+        <i class="fas fa-chart-bar"></i><span>Reportes</span>
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="version-info">SmartCampus UTA v1.0</div>
+    <div class="version-info">Estructura de Datos · 2025</div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main-content" id="mainContent">
+
+  <!-- DASHBOARD PAGE -->
+  <section class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Bienvenido al sistema SmartCampus UTA</p>
+      </div>
+      <div class="page-date" id="currentDate"></div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card primary" onclick="document.querySelector('[data-page=usuarios]').click()" style="cursor:pointer" title="Ver usuarios">
+        <div class="kpi-icon"><i class="fas fa-users"></i></div>
+        <div class="kpi-data">
+          <div class="kpi-value" id="kpi-usuarios">0</div>
+          <div class="kpi-label">Usuarios Registrados</div>
+        </div>
+        <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> <small>Ver todos →</small></div>
+      </div>
+      <div class="kpi-card secondary" onclick="document.querySelector('[data-page=turnos]').click()" style="cursor:pointer" title="Ver turnos">
+        <div class="kpi-icon"><i class="fas fa-ticket-alt"></i></div>
+        <div class="kpi-data">
+          <div class="kpi-value" id="kpi-turnos">0</div>
+          <div class="kpi-label">Turnos en Espera</div>
+        </div>
+        <div class="kpi-trend neutral"><i class="fas fa-minus"></i> <small>Gestionar →</small></div>
+      </div>
+      <div class="kpi-card accent" onclick="document.querySelector('[data-page=tramites]').click()" style="cursor:pointer" title="Ver trámites">
+        <div class="kpi-icon"><i class="fas fa-file-alt"></i></div>
+        <div class="kpi-data">
+          <div class="kpi-value" id="kpi-tramites">0</div>
+          <div class="kpi-label">Trámites Activos</div>
+        </div>
+        <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> <small>Ver todos →</small></div>
+      </div>
+      <div class="kpi-card dark" onclick="document.querySelector('[data-page=documentos]').click()" style="cursor:pointer" title="Ver documentos">
+        <div class="kpi-icon"><i class="fas fa-folder"></i></div>
+        <div class="kpi-data">
+          <div class="kpi-value" id="kpi-docs">0</div>
+          <div class="kpi-label">Documentos</div>
+        </div>
+        <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> <small>Ver todos →</small></div>
+      </div>
+    </div>
+
+    <!-- Two-column panels -->
+    <div class="panels-row">
+      <!-- Acceso rápido -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-th-large"></i> Acceso Rápido</h3>
+        </div>
+        <div class="panel-body">
+          <div class="struct-item" onclick="document.querySelector('[data-page=turnos]').click()" style="cursor:pointer;border-radius:8px;transition:.2s" onmouseover="this.style.background='#FEF5F4'" onmouseout="this.style.background=''">
+            <div class="struct-icon cola"><i class="fas fa-ticket-alt"></i></div>
+            <div class="struct-info">
+              <strong>Turnos de Atención</strong>
+              <span>Gestión de cola de atención</span>
+            </div>
+            <div class="struct-count" id="colaCount">0 en espera</div>
+          </div>
+          <div class="struct-item" onclick="document.querySelector('[data-page=tramites]').click()" style="cursor:pointer;border-radius:8px;transition:.2s" onmouseover="this.style.background='#FEF5F4'" onmouseout="this.style.background=''">
+            <div class="struct-icon lista"><i class="fas fa-file-alt"></i></div>
+            <div class="struct-info">
+              <strong>Trámites y Solicitudes</strong>
+              <span>Seguimiento de solicitudes</span>
+            </div>
+            <div class="struct-count" id="listaCount">0 registros</div>
+          </div>
+          <div class="struct-item" onclick="document.querySelector('[data-page=documentos]').click()" style="cursor:pointer;border-radius:8px;transition:.2s" onmouseover="this.style.background='#FEF5F4'" onmouseout="this.style.background=''">
+            <div class="struct-icon arbol"><i class="fas fa-folder-open"></i></div>
+            <div class="struct-info">
+              <strong>Gestión Documental</strong>
+              <span>Categorías y documentos</span>
+            </div>
+            <div class="struct-count" id="arbolCount">0 categorías</div>
+          </div>
+          <div class="struct-item" onclick="document.querySelector('[data-page=usuarios]').click()" style="cursor:pointer;border-radius:8px;transition:.2s" onmouseover="this.style.background='#FEF5F4'" onmouseout="this.style.background=''">
+            <div class="struct-icon pila"><i class="fas fa-users"></i></div>
+            <div class="struct-info">
+              <strong>Usuarios del Sistema</strong>
+              <span>Administración de cuentas</span>
+            </div>
+            <div class="struct-count" id="pilaCount">Ver todos →</div>
+          </div>
+          <div class="struct-item" onclick="document.querySelector('[data-page=historial]').click()" style="cursor:pointer;border-radius:8px;transition:.2s" onmouseover="this.style.background='#FEF5F4'" onmouseout="this.style.background=''">
+            <div class="struct-icon grafo"><i class="fas fa-history"></i></div>
+            <div class="struct-info">
+              <strong>Historial de Acciones</strong>
+              <span>Bitácora del sistema</span>
+            </div>
+            <div class="struct-count">Ver historial →</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Últimas acciones -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-history"></i> Últimas Acciones</h3>
+          <button class="btn-sm" id="undoBtn"><i class="fas fa-undo"></i> Deshacer</button>
+        </div>
+        <div class="panel-body">
+          <div class="action-list" id="actionList">
+            <div class="action-item">
+              <div class="action-dot success"></div>
+              <div class="action-text">
+                <strong>Turno T-001 atendido</strong>
+                <span>Hace 2 min · María García</span>
+              </div>
+            </div>
+            <div class="action-item">
+              <div class="action-dot info"></div>
+              <div class="action-text">
+                <strong>Documento cargado: Reglamento 2025</strong>
+                <span>Hace 5 min · Admin</span>
+              </div>
+            </div>
+            <div class="action-item">
+              <div class="action-dot warning"></div>
+              <div class="action-text">
+                <strong>Trámite T-045 registrado</strong>
+                <span>Hace 10 min · Juan Pérez</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TURNOS PAGE -->
+  <section class="page" id="page-turnos">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-ticket-alt"></i> Turnos de Atención</h1>
+        <p class="page-subtitle">Gestión de turnos y ventanillas de atención</p>
+      </div>
+      <button class="btn-primary" id="agregarTurnoBtn"><i class="fas fa-plus"></i> Nuevo Turno</button>
+    </div>
+
+    <!-- Turno actual destacado -->
+    <div class="turno-actual-card" id="turnoActualCard">
+      <div class="turno-actual-label">TURNO EN ATENCIÓN</div>
+      <div class="turno-actual-numero" id="turnoActualNum">—</div>
+      <div class="turno-actual-nombre" id="turnoActualNombre">Ninguno en atención</div>
+      <div class="turno-btns">
+        <button class="btn-success" id="atenderBtn"><i class="fas fa-check"></i> Atender Siguiente</button>
+        <button class="btn-outline" id="llamarBtn"><i class="fas fa-bell"></i> Llamar</button>
+      </div>
+    </div>
+
+    <!-- Ventanillas rotatoria (Lista Circular) -->
+    <div class="ventanillas-bar">
+      <span class="ventanillas-label"><i class="fas fa-sync-alt"></i> Ventanilla activa:</span>
+      <div class="ventanillas" id="ventanillas">
+        <div class="ventanilla active">V-1<br><small>Secretaría</small></div>
+        <div class="ventanilla">V-2<br><small>Finanzas</small></div>
+        <div class="ventanilla">V-3<br><small>Académico</small></div>
+        <div class="ventanilla">V-4<br><small>Bienestar</small></div>
+      </div>
+      <button class="btn-sm" id="rotarBtn"><i class="fas fa-redo"></i> Rotar</button>
+    </div>
+
+    <!-- Cola -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3><i class="fas fa-stream"></i> Cola de Espera <span id="colaSize" class="badge-label">0</span></h3>
+      </div>
+      <div class="panel-body">
+        <div class="cola-container" id="colaContainer">
+          <div class="cola-empty">La cola está vacía. Agregue turnos con el botón superior.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRAMITES PAGE -->
+  <section class="page" id="page-tramites">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-file-alt"></i> Gestión de Trámites</h1>
+        <p class="page-subtitle">Registro y seguimiento de solicitudes — RF4, RF6</p>
+      </div>
+      <button class="btn-primary" id="nuevoTramiteBtn"><i class="fas fa-plus"></i> Nuevo Trámite</button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-bar">
+      <select class="filter-select" id="filterEstado">
+        <option value="">Todos los estados</option>
+        <option value="Pendiente">Pendiente</option>
+        <option value="En proceso">En proceso</option>
+        <option value="Completado">Completado</option>
+        <option value="Rechazado">Rechazado</option>
+      </select>
+      <select class="filter-select" id="filterTipo">
+        <option value="">Todos los tipos</option>
+        <option value="Certificado">Certificado</option>
+        <option value="Beca">Beca</option>
+        <option value="Transferencia">Transferencia</option>
+        <option value="Matrícula">Matrícula</option>
+      </select>
+      <input class="filter-input" type="text" placeholder="Buscar por nombre..." id="searchTramite" />
+    </div>
+
+    <div class="panel">
+      <div class="panel-body no-padding">
+        <table class="data-table" id="tramitesTable">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Solicitante</th>
+              <th>Tipo</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tramitesTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCUMENTOS PAGE -->
+  <section class="page" id="page-documentos">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-folder-open"></i> Documentos</h1>
+        <p class="page-subtitle">Organización jerárquica de documentos institucionales</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-outline" onclick="window.crearCarpetaPadre()" style="display:inline-flex;align-items:center;gap:7px">
+          <i class="fas fa-folder-plus"></i> Nueva Carpeta
+        </button>
+        <button class="btn-primary" id="nuevoDocBtn" style="display:none">
+          <i class="fas fa-upload"></i> Subir Documento
+        </button>
+      </div>
+    </div>
+
+    <div class="panels-row">
+      <!-- Árbol -->
+      <div class="panel" style="flex:1">
+        <div class="panel-header"><h3><i class="fas fa-sitemap"></i> Árbol de Categorías</h3></div>
+        <div class="panel-body">
+          <div class="tree-container" id="treeContainer"></div>
+        </div>
+      </div>
+      <!-- Documentos de categoría -->
+      <div class="panel" style="flex:1.5">
+        <div class="panel-header">
+          <h3><i class="fas fa-file"></i> Documentos en: <span id="catActual">Raíz</span></h3>
+        </div>
+        <div class="panel-body">
+          <div class="doc-list" id="docList">
+            <div class="cola-empty">Seleccione una categoría del árbol.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAPA/RUTAS PAGE -->
+  <section class="page" id="page-rutas">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-map-marked-alt"></i> Mapa del Campus</h1>
+        <p class="page-subtitle">Ubicaciones y cálculo de rutas entre puntos del campus</p>
+      </div>
+    </div>
+
+    <div class="panels-row">
+      <div class="panel" style="flex:2">
+        <div class="panel-header"><h3><i class="fas fa-map"></i> Campus Huachi — Ambato, Ecuador</h3></div>
+          <div class="panel-body" style="padding:0;overflow:hidden;border-radius:0 0 10px 10px">
+            <div id="leafletMap" style="height:430px;width:100%;"></div>
+          <div style="padding:10px 16px;background:#f9f9f9;border-top:1px solid #eee;display:flex;gap:18px;flex-wrap:wrap">
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#C0392B;margin-right:5px"></span>Administración</span>
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#E67E22;margin-right:5px"></span>Facultades</span>
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27AE60;margin-right:5px"></span>Servicios</span>
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#2980B9;margin-right:5px"></span>Deportes</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="flex:1">
+        <div class="panel-header"><h3><i class="fas fa-route"></i> Calcular Ruta</h3></div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label>Desde</label>
+            <select class="form-control" id="desde">
+              <option value="">Seleccione origen</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Hasta</label>
+            <select class="form-control" id="hasta">
+              <option value="">Seleccione destino</option>
+            </select>
+          </div>
+          <button class="btn-primary w-full" id="calcularRutaBtn"><i class="fas fa-route"></i> Calcular Ruta BFS</button>
+          <div class="ruta-result" id="rutaResult" style="display:none">
+            <h4>Ruta encontrada:</h4>
+            <div class="ruta-path" id="rutaPath"></div>
+            <div class="ruta-dist" id="rutaDist"></div>
+          </div>
+          <div class="nodos-list">
+            <h4>Nodos del campus</h4>
+            <div id="nodosList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORIAL PAGE -->
+  <section class="page" id="page-historial">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-history"></i> Historial de Acciones</h1>
+        <p class="page-subtitle">Bitácora de actividad del sistema</p>
+      </div>
+      <button class="btn-outline" id="clearHistorial"><i class="fas fa-trash"></i> Limpiar</button>
+    </div>
+    <div class="panel">
+      <div class="panel-body no-padding">
+        <table class="data-table">
+          <thead>
+            <tr><th>#</th><th>Acción</th><th>Usuario</th><th>Módulo</th><th>Fecha/Hora</th><th>Estado</th></tr>
+          </thead>
+          <tbody id="historialTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- USUARIOS PAGE -->
+  <section class="page" id="page-usuarios">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-users"></i> Gestión de Usuarios</h1>
+        <p class="page-subtitle">Administración de usuarios, roles y permisos</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-outline" onclick="window.exportarUsuarios('excel')"><i class="fas fa-file-excel" style="color:#1D6F42"></i> Excel</button>
+        <button class="btn-outline" onclick="window.exportarUsuarios('pdf')"><i class="fas fa-file-pdf" style="color:#C0392B"></i> PDF</button>
+        <button class="btn-primary" id="nuevoUserBtn"><i class="fas fa-plus"></i> Nuevo Usuario</button>
+      </div>
+    </div>
+    <!-- Filtros de usuarios -->
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-body" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;padding:14px">
+        <div style="flex:2;min-width:200px">
+          <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Buscar</label>
+          <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchUsuario" placeholder="Nombre o email..." oninput="filterUsuarios()"/>
+          </div>
+        </div>
+        <div style="flex:1;min-width:150px">
+          <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Rol</label>
+          <select class="form-control" id="filterRolUsuario" onchange="filterUsuarios()">
+            <option value="">Todos los roles</option>
+            <option value="Estudiante">Estudiante</option>
+            <option value="Docente">Docente</option>
+            <option value="Secretaria">Secretaria</option>
+            <option value="Administrador">Administrador</option>
+            <option value="Personal Administrativo">Personal Adm.</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:130px">
+          <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Estado</label>
+          <select class="form-control" id="filterEstadoUsuario" onchange="filterUsuarios()">
+            <option value="">Todos</option>
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </div>
+        <button class="btn-outline" onclick="document.getElementById('searchUsuario').value='';document.getElementById('filterRolUsuario').value='';document.getElementById('filterEstadoUsuario').value='';filterUsuarios()">
+          <i class="fas fa-times"></i> Limpiar
+        </button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <h3><i class="fas fa-list"></i> Lista de Usuarios</h3>
+        <span id="usuariosBadge" style="background:var(--red-100);color:var(--red-700);padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700">0 usuarios</span>
+      </div>
+      <div class="panel-body no-padding">
+        <table class="data-table">
+          <thead>
+            <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="usuariosTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORTES PAGE -->
+  <section class="page" id="page-reportes">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-chart-bar"></i> Reportes</h1>
+        <p class="page-subtitle">Métricas, estadísticas y exportación de datos</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-outline" onclick="window.exportarReporte('excel')" title="Exportar a Excel">
+          <i class="fas fa-file-excel" style="color:#1D6F42"></i> Excel
+        </button>
+        <button class="btn-primary" onclick="window.exportarReporte('pdf')" title="Exportar a PDF">
+          <i class="fas fa-file-pdf"></i> PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card primary">
+        <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="kpi-data"><div class="kpi-value" id="rep-atendidos">0</div><div class="kpi-label">Turnos Atendidos</div></div>
+      </div>
+      <div class="kpi-card accent">
+        <div class="kpi-icon"><i class="fas fa-file-check"></i></div>
+        <div class="kpi-data"><div class="kpi-value" id="rep-completados">0</div><div class="kpi-label">Trámites Completados</div></div>
+      </div>
+      <div class="kpi-card secondary">
+        <div class="kpi-icon"><i class="fas fa-times-circle"></i></div>
+        <div class="kpi-data"><div class="kpi-value" id="rep-rechazados">0</div><div class="kpi-label">Trámites Rechazados</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+        <div class="kpi-data"><div class="kpi-value" id="rep-pendientes">0</div><div class="kpi-label">Trámites Pendientes</div></div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-body" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;padding:16px">
+        <div class="form-group" style="margin:0;flex:1;min-width:160px">
+          <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block">Tipo de reporte</label>
+          <select class="form-control" id="rep-filtro-tipo" onchange="window.cargarReportesAdmin()">
+            <option value="todos">Todos</option>
+            <option value="turnos">Solo Turnos</option>
+            <option value="tramites">Solo Trámites</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:160px">
+          <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block">Rol del usuario</label>
+          <select class="form-control" id="rep-filtro-rol" onchange="window.cargarReportesAdmin()">
+            <option value="todos">Todos los roles</option>
+            <option value="Estudiante">Estudiante</option>
+            <option value="Docente">Docente</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block">Estado</label>
+          <select class="form-control" id="rep-filtro-estado" onchange="window.cargarReportesAdmin()">
+            <option value="todos">Todos</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En proceso">En proceso</option>
+            <option value="Completado">Completado</option>
+            <option value="Rechazado">Rechazado</option>
+            <option value="Atendido">Atendido (Turnos)</option>
+            <option value="Esperando">Esperando (Turnos)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block">Fecha desde</label>
+          <input type="date" class="form-control" id="rep-fecha-desde" onchange="window.cargarReportesAdmin()"/>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block">Fecha hasta</label>
+          <input type="date" class="form-control" id="rep-fecha-hasta" onchange="window.cargarReportesAdmin()"/>
+        </div>
+        <div style="flex:1;min-width:180px">
+          <label style="font-size:12px;font-weight:600;color:#555;margin-bottom:4px;display:block">Usuario específico</label>
+          <input type="text" class="form-control" id="rep-filtro-usuario" placeholder="Nombre del usuario..." 
+                 oninput="window.cargarReportesAdmin()" style="font-size:13px"/>
+        </div>
+        <button class="btn-outline" onclick="window.limpiarFiltrosReporte()" style="margin:0">
+          <i class="fas fa-times"></i> Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabla de resultados -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3 id="rep-tabla-titulo"><i class="fas fa-table"></i> Resultados</h3>
+        <span id="rep-total-badge" style="background:var(--red-100);color:var(--red-700);padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700">0 registros</span>
+      </div>
+      <div class="panel-body no-padding">
+        <div id="rep-tabla-container" style="overflow-x:auto">
+          <table class="data-table" id="rep-tabla">
+            <thead id="rep-tabla-head"></thead>
+            <tbody id="rep-tabla-body">
+              <tr><td colspan="7" style="text-align:center;color:#aaa;padding:30px">
+                <i class="fas fa-filter"></i> Selecciona filtros y haz clic en Generar
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Modal</h3>
+      <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-outline" id="modalCancel">Cancelar</button>
+      <button class="btn-primary" id="modalConfirm">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/config/supabase-config.js"></script>
+<script src="../js/utils/structures.js"></script>
+<script src="../js/utils/dashboard-utils.js"></script>
+<script src="../js/services/data.js"></script>
+<script src="../js/services/auth.js"></script>
+<script src="../js/dashboards/app.js"></script>
+<script src="../js/dashboards/campus-map.js"></script>
+</body>
+</html>

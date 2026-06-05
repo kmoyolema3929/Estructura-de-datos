@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartCampus UTA — Docente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <style>
+    .welcome-banner {
+      background: linear-gradient(135deg, #1a472a, #2e8b57);
+      border-radius: var(--radius);
+      padding: 28px 30px;
+      color: white;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .welcome-banner h2 { font-family:'Montserrat',sans-serif; font-size:24px; font-weight:800; margin-bottom:6px; }
+    .welcome-banner p  { font-size:13px; opacity:0.85; }
+    .welcome-avatar {
+      width:60px; height:60px;
+      background: rgba(255,255,255,0.2);
+      border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:24px; font-weight:800; color:#fff;
+      border:3px solid rgba(255,255,255,0.3);
+      flex-shrink:0;
+    }
+    /* Notificaciones */
+    .notif-panel{position:fixed;top:64px;right:80px;width:340px;background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.18);border:1px solid #EEE;z-index:1100;display:none;flex-direction:column;overflow:hidden}
+    .notif-panel.open{display:flex}
+    .notif-panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #F0F0F0}
+    .notif-panel-header span{font-family:"Montserrat",sans-serif;font-size:14px;font-weight:700;color:#1A0B0D;display:flex;align-items:center;gap:8px}
+    .notif-mark-all{background:none;border:none;font-size:11px;font-weight:600;color:#C0392B;cursor:pointer;padding:4px 8px;border-radius:6px}
+    .notif-list{max-height:300px;overflow-y:auto}
+    .notif-item{display:flex;align-items:flex-start;gap:12px;padding:13px 18px;border-bottom:1px solid #F5F5F5;transition:background .2s;cursor:pointer}
+    .notif-item.unread{background:#FEF5F4}
+    .notif-item:hover{background:#F0F0F0}
+    .notif-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px}
+    .notif-dot.info{background:#2980B9}.notif-dot.success{background:#27AE60}.notif-dot.warning{background:#F39C12}
+    .notif-content{flex:1}.notif-content strong{display:block;font-size:13px;font-weight:600;margin-bottom:2px}
+    .notif-content p{font-size:12px;color:#6B6B6B;margin:0 0 4px;line-height:1.4}
+    .notif-time{font-size:10px;color:#BCBCBC;display:flex;align-items:center;gap:4px}
+    .notif-panel-footer{padding:12px 18px;border-top:1px solid #F0F0F0;background:#FAFAFA}
+    .notif-panel-footer button{width:100%;background:none;border:1px solid #DDD;border-radius:8px;padding:9px;font-size:12px;font-weight:600;color:#3D3D3D;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+    /* Toast */
+    .toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:3000}
+    .toast{display:flex;align-items:center;gap:12px;background:#1A0B0D;color:#fff;padding:14px 18px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:320px;border-left:4px solid #E74C3C;animation:toastIn .3s ease}
+    .toast.success{border-left-color:#27AE60}.toast.warning{border-left-color:#F39C12}.toast.info{border-left-color:#2980B9}
+    @keyframes toastIn{from{transform:translateX(40px);opacity:0}to{opacity:1;transform:none}}
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+    .modal-overlay.open{display:flex;animation:fadeM .2s ease}
+    @keyframes fadeM{from{opacity:0}to{opacity:1}}
+    .modal{background:#fff;border-radius:14px;width:480px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:slideM .25s ease}
+    @keyframes slideM{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+    .modal-header{padding:20px 24px;border-bottom:1px solid #EEE;display:flex;align-items:center;justify-content:space-between}
+    .modal-header h3{font-family:"Montserrat",sans-serif;font-size:16px;font-weight:700;color:#1A0B0D}
+    .modal-close{background:none;border:none;cursor:pointer;color:#6B6B6B;font-size:16px;padding:4px 8px;border-radius:6px}
+    .modal-close:hover{background:#FCE8E6;color:#C0392B}
+    .modal-body{padding:24px;overflow-y:auto;flex:1}
+    .modal-footer{padding:16px 24px;border-top:1px solid #EEE;display:flex;justify-content:flex-end;gap:10px}
+    .form-group{margin-bottom:14px}.form-group label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:6px}
+    .form-control{width:100%;padding:9px 14px;border:1.5px solid #DDD;border-radius:8px;font-size:13px;font-family:"Inter",sans-serif;outline:none;transition:.2s;background:#FAFAFA}
+    .form-control:focus{border-color:#C0392B;box-shadow:0 0 0 3px #FCE8E6;background:#fff}
+    .form-control:disabled{background:#F5F5F5;color:#999;cursor:not-allowed}
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="brand-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+    <div class="brand-text">
+      <span class="brand-name">SmartCampus UTA</span>
+      <span class="brand-sub">Portal Docente</span>
+    </div>
+  </div>
+  <div class="navbar-center">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Buscar..." id="globalSearch"/>
+    </div>
+  </div>
+  <div class="navbar-actions" style="position:relative">
+    <button class="btn-notif" id="notifBtn" title="Notificaciones">
+      <i class="fas fa-bell"></i>
+      <span class="notif-badge" id="notifCount">3</span>
+    </button>
+    <div class="user-pill" id="userMenu" title="Ver perfil" style="cursor:pointer">
+      <div class="user-avatar" id="userAvatar">D</div>
+      <div class="user-info">
+        <span class="user-name" id="userName">Docente</span>
+        <span class="user-role" id="userRole">Docente</span>
+      </div>
+      <i class="fas fa-chevron-down" style="font-size:10px;opacity:0.7"></i>
+    </div>
+    <button class="btn-logout" id="logoutBtn" title="Cerrar sesión">
+      <i class="fas fa-sign-out-alt"></i>
+    </button>
+  </div>
+</nav>
+
+<!-- PANEL NOTIFICACIONES -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-panel-header">
+    <span><i class="fas fa-bell"></i> Notificaciones</span>
+    <button class="notif-mark-all" id="markAllBtn">Marcar leídas</button>
+  </div>
+  <div class="notif-list" id="notifList"></div>
+  <div class="notif-panel-footer">
+    <button onclick="document.getElementById('notifPanel').classList.remove('open')">
+      <i class="fas fa-times"></i> Cerrar
+    </button>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<aside class="sidebar">
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <span class="nav-label">Principal</span>
+      <a href="#" class="nav-item active" data-page="dashboard"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+      <a href="#" class="nav-item" data-page="tramites"><i class="fas fa-file-alt"></i><span>Mis Trámites</span></a>
+      <a href="#" class="nav-item" data-page="documentos"><i class="fas fa-folder-open"></i><span>Documentos</span></a>
+      <a href="#" class="nav-item" data-page="rutas"><i class="fas fa-map-marked-alt"></i><span>Mapa del Campus</span></a>
+      <a href="#" class="nav-item" data-page="historial"><i class="fas fa-history"></i><span>Mi Historial</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="version-info">SmartCampus UTA v1.0</div>
+    <div class="version-info">Portal Docente</div>
+  </div>
+</aside>
+
+<main class="main-content">
+
+  <!-- DASHBOARD -->
+  <section class="page active" id="page-dashboard">
+    <div class="welcome-banner">
+      <div>
+        <h2 id="welcomeName">¡Bienvenido!</h2>
+          <div class="page-date" id="currentDate" style="font-size:13px;opacity:0.8;margin-top:4px"></div>
+        <p>Gestiona tus trámites y consulta documentos institucionales.</p>
+      </div>
+      <div class="welcome-avatar" id="welcomeAvatar">D</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card primary">
+        <div class="kpi-icon"><i class="fas fa-file-alt"></i></div>
+        <div class="kpi-data"><div class="kpi-value" id="misTramites">0</div><div class="kpi-label">Mis Trámites</div></div>
+      </div>
+      <div class="kpi-card accent">
+        <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+        <div class="kpi-data"><div class="kpi-value" id="tramitesPendientes">0</div><div class="kpi-label">Pendientes</div></div>
+      </div>
+      <div class="kpi-card dark">
+        <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="kpi-data"><div class="kpi-value" id="tramitesCompletadosKpi">0</div><div class="kpi-label">Completados</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <h3><i class="fas fa-file-alt"></i> Últimos Trámites</h3>
+        <button class="btn-primary" id="nuevoTramiteBtn"><i class="fas fa-plus"></i> Nuevo Trámite</button>
+      </div>
+      <div class="panel-body no-padding">
+        <table class="data-table">
+          <thead><tr><th>Código</th><th>Tipo</th><th>Fecha</th><th>Estado</th></tr></thead>
+          <tbody id="ultimosTramites">
+            <tr><td colspan="4" style="text-align:center;color:#aaa;padding:16px">Sin trámites registrados</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- MIS TRÁMITES -->
+  <section class="page" id="page-tramites">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-file-alt"></i> Mis Trámites</h1>
+        <p class="page-subtitle">Historial y seguimiento de tus solicitudes</p>
+      </div>
+      <button class="btn-primary" id="nuevoTramiteBtn2"><i class="fas fa-plus"></i> Nuevo Trámite</button>
+    </div>
+    <div class="panel">
+      <div class="panel-body no-padding">
+        <table class="data-table">
+          <thead><tr><th>Código</th><th>Tipo</th><th>Fecha</th><th>Estado</th><th>Descripción</th></tr></thead>
+          <tbody id="tramitesCompletos">
+            <tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px">Sin trámites registrados</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCUMENTOS -->
+  <section class="page" id="page-documentos">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-folder-open"></i> Documentos Institucionales</h1>
+        <p class="page-subtitle">Consulta documentos y reglamentos</p>
+      </div>
+    </div>
+    <div class="panels-row">
+      <div class="panel" style="flex:1">
+        <div class="panel-header"><h3><i class="fas fa-sitemap"></i> Árbol de Categorías</h3></div>
+        <div class="panel-body"><div class="tree-container" id="treeContainer"></div></div>
+      </div>
+      <div class="panel" style="flex:1.5">
+        <div class="panel-header">
+          <h3><i class="fas fa-file"></i> Documentos en: <span id="catActual">Raíz</span></h3>
+        </div>
+        <div class="panel-body"><div class="doc-list" id="docList"><div class="cola-empty">Selecciona una categoría del árbol.</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAPA -->
+  <section class="page" id="page-rutas">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-map-marked-alt"></i> Mapa del Campus</h1>
+        <p class="page-subtitle">Campus Huachi — Ambato, Ecuador</p>
+      </div>
+    </div>
+    <div class="panels-row">
+      <div class="panel" style="flex:2">
+        <div class="panel-header"><h3><i class="fas fa-map"></i> Campus Huachi UTA</h3></div>
+        <div class="panel-body" style="padding:0;overflow:hidden;border-radius:0 0 10px 10px">
+          <div id="leafletMap" style="height:430px;width:100%;"></div>
+          <div style="padding:10px 16px;background:#f9f9f9;border-top:1px solid #eee;display:flex;gap:18px;flex-wrap:wrap">
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#C0392B;margin-right:5px"></span>Administración</span>
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#E67E22;margin-right:5px"></span>Facultades</span>
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27AE60;margin-right:5px"></span>Servicios</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="flex:1">
+        <div class="panel-header"><h3><i class="fas fa-route"></i> Calcular Ruta</h3></div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label>Desde</label>
+            <select class="form-control" id="desde"><option value="">Seleccione origen</option></select>
+          </div>
+          <div class="form-group">
+            <label>Hasta</label>
+            <select class="form-control" id="hasta"><option value="">Seleccione destino</option></select>
+          </div>
+          <button class="btn-primary" style="width:100%;justify-content:center;margin-top:4px" id="calcularRutaBtn">
+            <i class="fas fa-route"></i> Calcular Ruta
+          </button>
+          <div id="rutaResult" style="display:none;margin-top:14px;background:#FCE8E6;border:1px solid #F4A09A;border-radius:8px;padding:14px">
+            <h4 style="font-size:13px;font-weight:700;color:#C0392B;margin-bottom:8px">Ruta encontrada:</h4>
+            <div id="rutaPath" style="font-size:13px;font-weight:600;color:#1A0B0D"></div>
+            <div id="rutaDist" style="font-size:12px;color:#6B6B6B;margin-top:6px"></div>
+          </div>
+          <div style="margin-top:14px">
+            <h4 style="font-size:13px;font-weight:700;margin-bottom:8px;color:#3D3D3D">Puntos del campus</h4>
+            <div id="nodosList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section class="page" id="page-historial">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-history"></i> Mi Historial</h1>
+        <p class="page-subtitle">Registro de tus acciones en el sistema</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-body no-padding">
+        <table class="data-table">
+          <thead><tr><th>Fecha/Hora</th><th>Acción</th><th>Estado</th><th>Módulo</th></tr></thead>
+          <tbody id="historialTbody">
+            <tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">Sin historial registrado</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODAL GENÉRICO -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Modal</h3>
+      <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-outline" id="modalCancel">Cancelar</button>
+      <button class="btn-primary" id="modalConfirm">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/utils/structures.js"></script>
+<script src="../js/config/supabase-config.js"></script>
+<script src="../js/services/data.js"></script>
+<script src="../js/services/auth.js"></script>
+<script src="../js/utils/dashboard-utils.js"></script>
+
+<script src="../js/dashboards/campus-map.js"></script>
+<script src="../js/dashboards/docente-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartCampus UTA — Inicio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --red-900: #7B0D1E;
+      --red-800: #9B1226;
+      --red-700: #B91C31;
+      --red-600: #C0392B;
+      --red-100: #FCE8E6;
+      --dark:    #0D0607;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; color: #1a0b0d; overflow-x: hidden; }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 64px;
+      background: rgba(13,6,7,0.92);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center;
+      padding: 0 48px;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      gap: 20px;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .nav-brand-icon {
+      width: 36px; height: 36px;
+      background: var(--red-700);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 16px;
+    }
+    .nav-brand-name {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800; font-size: 16px;
+      color: #fff;
+    }
+    .nav-brand-name span { color: #F4A09A; }
+    .nav-links {
+      display: flex; align-items: center; gap: 28px;
+      margin-left: 40px;
+    }
+    .nav-links a {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 13px; font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-spacer { flex: 1; }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-login {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: all .2s;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .btn-login:hover { background: rgba(255,255,255,0.18); }
+    .btn-register {
+      background: var(--red-700);
+      border: none;
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: all .2s;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .btn-register:hover { background: var(--red-800); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(185,28,49,0.4); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0D0607 0%, #2A1215 55%, #1a0a0d 100%);
+      display: flex; align-items: center;
+      padding: 100px 48px 60px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    /* Círculos decorativos */
+    .hero-circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+    }
+    .hero-circle-1 { width: 500px; height: 500px; background: var(--red-700); top: -100px; right: -100px; }
+    .hero-circle-2 { width: 300px; height: 300px; background: var(--red-900); bottom: -50px; left: 200px; }
+
+    .hero-content { max-width: 600px; position: relative; z-index: 1; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(185,28,49,0.2);
+      border: 1px solid rgba(185,28,49,0.4);
+      color: #F4A09A;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+    .hero-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 54px; font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      letter-spacing: -1.5px;
+    }
+    .hero-title span {
+      background: linear-gradient(to right, #F4A09A, #C0392B);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+      font-size: 17px; color: rgba(255,255,255,0.6);
+      line-height: 1.7; margin-bottom: 36px;
+      max-width: 500px;
+    }
+    .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-cta-primary {
+      background: var(--red-700);
+      color: #fff; border: none;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 15px; font-weight: 700;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 9px;
+      transition: all .2s;
+    }
+    .btn-cta-primary:hover { background: var(--red-800); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(185,28,49,0.4); }
+    .btn-cta-secondary {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 9px;
+      transition: all .2s;
+    }
+    .btn-cta-secondary:hover { background: rgba(255,255,255,0.14); }
+
+    .hero-stats {
+      display: flex; gap: 32px;
+      margin-top: 48px;
+    }
+    .hero-stat { text-align: left; }
+    .hero-stat-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 28px; font-weight: 800; color: #fff;
+    }
+    .hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+    /* ── FEATURES ── */
+    .features {
+      background: #fff;
+      padding: 80px 48px;
+    }
+    .section-label {
+      text-align: center;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--red-600);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 34px; font-weight: 800;
+      text-align: center; color: #1a0b0d;
+      margin-bottom: 48px;
+      letter-spacing: -0.5px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .feature-card {
+      background: #FAFAFA;
+      border: 1px solid #EEE;
+      border-radius: 14px;
+      padding: 28px 24px;
+      transition: all .2s;
+    }
+    .feature-card:hover { border-color: var(--red-300, #F4A09A); transform: translateY(-3px); box-shadow: 0 8px 28px rgba(185,28,49,0.08); }
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: #fff;
+      margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #1a0b0d; }
+    .feature-card p  { font-size: 13px; color: #888; line-height: 1.6; }
+
+    /* ── MÓDULOS ── */
+    .modulos {
+      background: #F8F8F8;
+      padding: 80px 48px;
+    }
+    .modulos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .modulo-card {
+      background: #fff;
+      border: 1px solid #EEE;
+      border-radius: 12px;
+      padding: 22px;
+      display: flex; align-items: center; gap: 14px;
+      transition: all .2s;
+    }
+    .modulo-card:hover { border-color: var(--red-600); box-shadow: 0 4px 16px rgba(185,28,49,0.1); }
+    .modulo-num {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: var(--red-100);
+      min-width: 36px;
+    }
+    .modulo-info strong { display: block; font-size: 13px; font-weight: 700; color: #1a0b0d; }
+    .modulo-info span  { font-size: 11px; color: #aaa; }
+
+    /* ── CTA FINAL ── */
+    .cta-final {
+      background: linear-gradient(135deg, var(--red-900), var(--red-700));
+      padding: 80px 48px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-final h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 36px; font-weight: 800; color: #fff;
+      margin-bottom: 16px;
+    }
+    .cta-final p { font-size: 16px; color: rgba(255,255,255,0.7); margin-bottom: 32px; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--dark);
+      padding: 28px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-brand {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.6);
+    }
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,0.3); }
+
+    @media (max-width: 768px) {
+      .navbar { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hero { padding: 100px 24px 60px; }
+      .hero-title { font-size: 36px; }
+      .features, .modulos, .cta-final { padding: 60px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+  <a href="index.html" class="nav-brand">
+    <div class="nav-brand-icon"><i class="fas fa-university"></i></div>
+    <div class="nav-brand-name">Smart<span>Campus</span> UTA</div>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Módulos</a>
+    <a href="#modulos">Funciones</a>
+    <a href="#contacto">Contacto</a>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-actions">
+    <a href="pages/login.html" class="btn-login"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>
+    <a href="pages/register.html" class="btn-register"><i class="fas fa-user-plus"></i> Registrarse</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-circle hero-circle-1"></div>
+  <div class="hero-circle hero-circle-2"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <i class="fas fa-university"></i>
+      Universidad Técnica de Ambato · Campus Huachi
+    </div>
+    <h1 class="hero-title">
+      Gestión universitaria<br><span>inteligente y ágil</span>
+    </h1>
+    <p class="hero-desc">
+      SmartCampus UTA centraliza trámites, turnos, documentos y rutas del campus en una sola plataforma web. Diseñado para estudiantes, docentes y personal administrativo.
+    </p>
+    <div class="hero-cta">
+      <a href="pages/register.html" class="btn-cta-primary">
+        <i class="fas fa-user-plus"></i> Crear cuenta institucional
+      </a>
+      <a href="pages/login.html" class="btn-cta-secondary">
+        <i class="fas fa-sign-in-alt"></i> Ya tengo cuenta
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features" id="features">
+  <div class="section-label">Capacidades del sistema</div>
+  <h2 class="section-title">Todo lo que necesitas en un solo lugar</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#C0392B"><i class="fas fa-ticket-alt"></i></div>
+      <h3>Cola de Turnos</h3>
+      <p>Sistema de atención ordenado por llegada con rotación automática de ventanillas.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#E67E22"><i class="fas fa-file-alt"></i></div>
+      <h3>Gestión de Trámites</h3>
+      <p>Registra, da seguimiento y resuelve solicitudes académicas y administrativas.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#27AE60"><i class="fas fa-folder-open"></i></div>
+      <h3>Documentos Jerárquicos</h3>
+      <p>Organización de documentos institucionales en categorías y subcategorías.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#2980B9"><i class="fas fa-map-marked-alt"></i></div>
+      <h3>Mapa del Campus</h3>
+      <p>Mapa interactivo con rutas óptimas entre edificios usando OpenStreetMap.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#8E44AD"><i class="fas fa-history"></i></div>
+      <h3>Historial de Acciones</h3>
+      <p>Bitácora completa de eventos del sistema con función de deshacer acciones.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#16A085"><i class="fas fa-chart-bar"></i></div>
+      <h3>Reportes y Métricas</h3>
+      <p>Estadísticas en tiempo real de turnos, trámites y actividad del sistema.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── MÓDULOS ── -->
+<section class="modulos" id="modulos">
+  <div class="section-label">Módulos del sistema</div>
+  <h2 class="section-title">Módulos cubiertos</h2>
+  <div class="modulos-grid">
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Autenticación</strong><span>Registro y login institucional</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Roles y Permisos</strong><span>Control de acceso por perfil</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Usuarios</strong><span>Estudiantes, docentes, personal</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Trámites</strong><span>Registro de solicitudes</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Turnos</strong><span>Cola de atención</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Historial</strong><span>Consulta por usuario</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Documentos</strong><span>Categorías jerárquicas</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Dependencias</strong><span>Estructura organizacional</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Puntos del campus</strong><span>Conexiones</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Rutas</strong><span>Calcula rutas entre ubicaciones</span></div></div>
+    <div class="modulo-card"><div class="modulo-num"></div><div class="modulo-info"><strong>Reportes</strong><span>Bitácora y métricas</span></div></div>
+  </div>
+</section>
+
+<!-- ── CTA FINAL ── -->
+<section class="cta-final" id="contacto">
+  <h2>¿Listo para empezar?</h2>
+  <p>Crea tu cuenta con tu correo institucional UTA y accede al sistema.</p>
+  <a href="pages/register.html" class="btn-cta-primary" style="display:inline-flex">
+    <i class="fas fa-user-plus"></i> Registrarse ahora
+  </a>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="footer">
+  <div class="footer-brand">© 2026 Smart Campus · Universidad Tecnica de Ambato · Todos los derechos reservados</div>
+  <div class="footer-copy">Universidad Técnica de Ambato</div>
+</footer>
+
+</body>
+</html>

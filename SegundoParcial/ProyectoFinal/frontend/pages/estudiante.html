@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartCampus UTA — Estudiante</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <style>
+    .welcome-banner {
+      background: linear-gradient(135deg, var(--red-900), var(--red-700));
+      border-radius: var(--radius);
+      padding: 28px 30px;
+      color: white;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .welcome-banner h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 24px; font-weight: 800; margin-bottom: 6px;
+    }
+    .welcome-banner p { font-size: 13px; opacity: 0.8; }
+    .welcome-avatar {
+      width: 60px; height: 60px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 800; color: #fff;
+      border: 3px solid rgba(255,255,255,0.3);
+      flex-shrink: 0;
+    }
+    .restricted-message {
+      background: #FEF6E8;
+      border-left: 4px solid var(--warning);
+      padding: 12px 16px; border-radius: 8px;
+      font-size: 13px; color: var(--gray-700); margin: 16px 0;
+    }
+
+    /* NOTIFICACIONES */
+    .notif-panel {
+      position: fixed;
+      top: calc(var(--navbar-h) + 8px);
+      right: 120px;
+      width: 340px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      border: 1px solid #EEE;
+      z-index: 1100;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      animation: dropPanel .2s ease;
+    }
+    .notif-panel.open { display: flex; }
+    @keyframes dropPanel { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
+    .notif-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid #F0F0F0;
+    }
+    .notif-panel-header span {
+      font-family: 'Montserrat',sans-serif; font-size: 14px; font-weight: 700;
+      color: var(--dark-800); display: flex; align-items: center; gap: 8px;
+    }
+    .notif-panel-header span i { color: var(--red-600); }
+    .notif-mark-all {
+      background: none; border: none; font-size: 11px; font-weight: 600;
+      color: var(--red-600); cursor: pointer; padding: 4px 8px; border-radius: 6px;
+    }
+    .notif-list { max-height: 320px; overflow-y: auto; }
+    .notif-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 13px 18px; border-bottom: 1px solid #F5F5F5; transition: background .2s;
+    }
+    .notif-item.unread { background: var(--red-50); }
+    .notif-item:hover { background: #F5F5F5; }
+    .notif-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px; }
+    .notif-dot.info    { background: var(--info); }
+    .notif-dot.success { background: var(--success); }
+    .notif-dot.warning { background: var(--warning); }
+    .notif-content { flex:1; }
+    .notif-content strong { display:block;font-size:13px;font-weight:600;color:var(--dark-800);margin-bottom:2px; }
+    .notif-content p { font-size:12px;color:var(--gray-500);margin:0 0 4px;line-height:1.4; }
+    .notif-time { font-size:10px;color:var(--gray-300);display:flex;align-items:center;gap:4px; }
+    .notif-empty { padding:28px;text-align:center;color:var(--gray-300);font-size:13px; }
+    .notif-panel-footer { padding:12px 18px;border-top:1px solid #F0F0F0;background:#FAFAFA; }
+    .notif-panel-footer button {
+      width:100%;background:none;border:1px solid #DDD;border-radius:8px;
+      padding:9px;font-size:12px;font-weight:600;color:var(--gray-700);
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:.2s;
+    }
+    .notif-panel-footer button:hover { background:var(--red-50);border-color:var(--red-300);color:var(--red-700); }
+
+    /* MODAL PERFIL */
+    .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px); }
+    .modal-overlay.open { display:flex;animation:fadeModal .2s ease; }
+    @keyframes fadeModal { from{opacity:0} to{opacity:1} }
+    .modal { background:#fff;border-radius:14px;width:460px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:slideModal .25s ease; }
+    @keyframes slideModal { from{transform:translateY(20px);opacity:0} to{transform:none;opacity:1} }
+    .modal-header { padding:20px 24px;border-bottom:1px solid #EEE;display:flex;align-items:center;justify-content:space-between; }
+    .modal-header h3 { font-family:'Montserrat',sans-serif;font-size:16px;font-weight:700;color:var(--dark-800); }
+    .modal-close { background:none;border:none;cursor:pointer;color:var(--gray-500);font-size:16px;padding:4px 8px;border-radius:6px; }
+    .modal-close:hover { background:var(--red-50);color:var(--red-700); }
+    .modal-body { padding:24px;overflow-y:auto;flex:1; }
+    .modal-footer { padding:16px 24px;border-top:1px solid #EEE;display:flex;justify-content:flex-end;gap:10px; }
+
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:6px; }
+    .form-control { width:100%;padding:9px 14px;border:1px solid #DDD;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:.2s;background:#fff; }
+    .form-control:focus { border-color:var(--red-500);box-shadow:0 0 0 3px var(--red-100); }
+    .form-control:disabled { background:#F5F5F5;color:#999;cursor:not-allowed; }
+    .form-row { display:flex;gap:14px; }
+    .form-row .form-group { flex:1; }
+
+    /* TOAST */
+    .toast-container { position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:3000; }
+    .toast { display:flex;align-items:center;gap:12px;background:var(--dark-800);color:#fff;padding:14px 18px;border-radius:10px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,0.25);animation:toastIn .3s ease;max-width:320px;border-left:4px solid var(--red-500); }
+    .toast.success { border-left-color:var(--success); }
+    .toast.warning { border-left-color:var(--warning); }
+    .toast.info    { border-left-color:var(--info); }
+    @keyframes toastIn { from{transform:translateX(40px);opacity:0} to{opacity:1;transform:none} }
+
+    .mt-3 { margin-top: 18px; }
+    .w-full { width:100%;justify-content:center; }
+    .btn-primary { background:var(--red-700);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:7px; }
+    .btn-primary:hover { background:var(--red-800); }
+    .btn-outline { background:transparent;color:var(--red-700);border:2px solid var(--red-300);border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:7px; }
+    .btn-outline:hover { background:var(--red-50); }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="brand-icon"><i class="fas fa-university"></i></div>
+    <div class="brand-text">
+      <span class="brand-name">SmartCampus UTA</span>
+      <span class="brand-sub">Portal Estudiantil</span>
+    </div>
+  </div>
+  <div class="navbar-center">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Buscar trámites, documentos..." id="globalSearch"/>
+    </div>
+  </div>
+  <div class="navbar-actions" style="position:relative">
+
+    <!-- BOTÓN NOTIFICACIONES -->
+    <button class="btn-notif" id="notifBtn" title="Notificaciones">
+      <i class="fas fa-bell"></i>
+      <span class="notif-badge" id="notifCount">2</span>
+    </button>
+
+    <!-- PANEL NOTIFICACIONES -->
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-panel-header">
+        <span><i class="fas fa-bell"></i> Notificaciones</span>
+        <button class="notif-mark-all" id="markAllBtn">Marcar leídas</button>
+      </div>
+      <div class="notif-list" id="notifList">
+        <div class="notif-empty">
+          <i class="fas fa-bell-slash"></i>
+          Sin notificaciones nuevas
+        </div>
+      </div>
+      <div class="notif-panel-footer">
+        <button onclick="document.getElementById('notifPanel').classList.remove('open')">
+          <i class="fas fa-times"></i> Cerrar
+        </button>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+    <div class="user-pill" id="userMenu" title="Ver perfil" style="cursor:pointer">
+      <div class="user-avatar" id="userAvatar">E</div>
+      <div class="user-info">
+        <span class="user-name" id="userName">Estudiante</span>
+        <span class="user-role" id="userRole">Estudiante</span>
+      </div>
+      <i class="fas fa-chevron-down" style="font-size:10px;opacity:0.7"></i>
+    </div>
+
+    <button class="btn-logout" id="logoutBtn" title="Cerrar sesión">
+      <i class="fas fa-sign-out-alt"></i>
+    </button>
+  </div>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <span class="nav-label">Principal</span>
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <i class="fas fa-th-large"></i><span>Mi Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-page="tramites">
+        <i class="fas fa-file-alt"></i><span>Mis Trámites</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <span class="nav-label">Servicios</span>
+      <a href="#" class="nav-item" data-page="turnos">
+        <i class="fas fa-ticket-alt"></i><span>Solicitar Turno</span>
+      </a>
+      <a href="#" class="nav-item" data-page="documentos">
+        <i class="fas fa-folder-open"></i><span>Documentos</span>
+      </a>
+      <a href="#" class="nav-item" data-page="historial-turnos"><i class="fas fa-history"></i><span>Historial de Turnos</span></a>
+      <a href="#" class="nav-item" data-page="rutas">
+        <i class="fas fa-map-marked-alt"></i><span>Mapa del Campus</span>
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="version-info">SmartCampus UTA v1.0</div>
+    <div class="version-info">Portal Estudiantil</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content" id="mainContent">
+
+  <!-- DASHBOARD -->
+  <section class="page active" id="page-dashboard">
+    <div class="welcome-banner">
+      <div>
+        <h2 id="welcomeName">¡Bienvenido!</h2>
+        <p id="welcomeSub">Accede a tus trámites, solicita turnos y consulta documentos.</p>
+      </div>
+      <div class="welcome-avatar" id="welcomeAvatar">E</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card primary">
+        <div class="kpi-icon"><i class="fas fa-file-alt"></i></div>
+        <div class="kpi-data">
+          <div class="kpi-value" id="misTramitesCount">0</div>
+          <div class="kpi-label">Mis Trámites</div>
+        </div>
+      </div>
+      <div class="kpi-card accent" style="cursor:pointer" onclick="document.querySelector('[data-page=turnos]').click()" title="Solicitar turno">
+        <div class="kpi-icon"><i class="fas fa-ticket-alt"></i></div>
+        <div class="kpi-data">
+          <div class="kpi-value" id="misTurnosCount">0</div>
+          <div class="kpi-label">Turnos Activos</div>
+        </div>
+      </div>
+      <div class="kpi-card dark">
+        <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+        <div class="kpi-data">
+          <div class="kpi-value" id="tramitesPendientes">0</div>
+          <div class="kpi-label">Pendientes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3><i class="fas fa-history"></i> Mis Últimos Trámites</h3>
+        <button class="btn-primary" id="nuevoTramiteBtn"><i class="fas fa-plus"></i> Nuevo Trámite</button>
+      </div>
+      <div class="panel-body no-padding">
+        <table class="data-table">
+          <thead><tr><th>Código</th><th>Tipo</th><th>Fecha</th><th>Estado</th></tr></thead>
+          <tbody id="misTramitesTbody">
+            <tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">Sin trámites registrados</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Turnos activos en dashboard -->
+    <div class="panel mt-3">
+      <div class="panel-header">
+        <h3><i class="fas fa-ticket-alt"></i> Mis Turnos Activos</h3>
+        <button class="btn-outline" onclick="document.querySelector('[data-page=turnos]').click()" style="font-size:12px;padding:6px 14px">
+          <i class="fas fa-plus"></i> Nuevo turno
+        </button>
+      </div>
+      <div class="panel-body">
+        <div id="misTurnosLista" class="cola-container">
+          <div class="cola-empty">No tienes turnos activos</div>
+        </div>
+      </div>
+    </div>
+    <div class="restricted-message">
+      <i class="fas fa-info-circle"></i> Para gestión administrativa, contacta al administrador del sistema.
+    </div>
+  </section>
+
+  <!-- MIS TRÁMITES -->
+  <section class="page" id="page-tramites">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-file-alt"></i> Mis Trámites</h1>
+        <p class="page-subtitle">Historial y seguimiento de tus solicitudes</p>
+      </div>
+      <button class="btn-primary" id="nuevoTramiteBtn2"><i class="fas fa-plus"></i> Nuevo Trámite</button>
+    </div>
+    <div class="panel">
+      <div class="panel-body no-padding">
+        <table class="data-table">
+          <thead><tr><th>Código</th><th>Tipo</th><th>Fecha</th><th>Estado</th><th>Descripción</th></tr></thead>
+          <tbody id="tramitesTbodyCompleto">
+            <tr><td colspan="5" style="text-align:center;color:#aaa;padding:20px">Sin trámites registrados</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TURNOS -->
+  <section class="page" id="page-turnos">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-ticket-alt"></i> Solicitar Turno</h1>
+        <p class="page-subtitle">Solicita un turno para atención presencial</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-body">
+        <div class="form-group">
+          <label>Tipo de servicio</label>
+          <select class="form-control" id="tipoServicio">
+            <option>Secretaría</option>
+            <option>Finanzas</option>
+            <option>Académico</option>
+            <option>Bienestar</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:12px">
+          <div class="form-group" style="flex:1">
+            <label>Fecha de la cita</label>
+            <input class="form-control" type="date" id="fechaCita" onchange="window.actualizarHoras && actualizarHoras()"/>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Hora disponible</label>
+            <select class="form-control" id="horaCita" disabled>
+              <option value="">Elige fecha primero</option>
+            </select>
+          </div>
+        </div>
+        <p style="font-size:11px;color:#999;margin:-8px 0 10px;display:flex;align-items:center;gap:5px">
+          <i class="fas fa-info-circle" style="color:var(--red-500)"></i>
+          Lunes a Viernes · 08:00–13:00 y 14:00–17:00
+        </p>
+        <div class="form-group">
+          <label>Motivo de la consulta</label>
+          <textarea class="form-control" id="motivo" rows="2" placeholder="Describe el motivo de tu consulta..."></textarea>
+        </div>
+        <button class="btn-primary w-full" id="solicitarTurnoBtn">
+          <i class="fas fa-calendar-check"></i> Agendar Turno
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORIAL DE TURNOS -->
+  <section class="page" id="page-historial-turnos">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-history"></i> Historial de Turnos</h1>
+        <p class="page-subtitle">Registro completo de tus turnos solicitados</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-body no-padding">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>N° Turno</th>
+              <th>Servicio</th>
+              <th>Fecha Cita</th>
+              <th>Hora</th>
+              <th>Estado</th>
+              <th>Solicitado</th>
+            </tr>
+          </thead>
+          <tbody id="historialTurnosTbody">
+            <tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px">
+              <i class="fas fa-spinner fa-spin"></i> Cargando...
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCUMENTOS -->
+  <section class="page" id="page-documentos">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-folder-open"></i> Documentos</h1>
+        <p class="page-subtitle">Consulta documentos institucionales</p>
+      </div>
+    </div>
+    <div class="panels-row">
+      <div class="panel" style="flex:1">
+        <div class="panel-header"><h3><i class="fas fa-sitemap"></i> Árbol de Categorías</h3></div>
+        <div class="panel-body"><div class="tree-container" id="treeContainer"></div></div>
+      </div>
+      <div class="panel" style="flex:1.5">
+        <div class="panel-header">
+          <h3><i class="fas fa-file"></i> Documentos en: <span id="catActual">Raíz</span></h3>
+        </div>
+        <div class="panel-body"><div class="doc-list" id="docList"><div class="cola-empty">Selecciona una categoría del árbol.</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAPA -->
+  <section class="page" id="page-rutas">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-map-marked-alt"></i> Mapa del Campus</h1>
+        <p class="page-subtitle">Campus Huachi — Ambato, Ecuador</p>
+      </div>
+    </div>
+    <div class="panels-row">
+      <div class="panel" style="flex:2">
+        <div class="panel-header"><h3><i class="fas fa-map"></i> Campus Huachi UTA</h3></div>
+        <div class="panel-body" style="padding:0;overflow:hidden;border-radius:0 0 10px 10px">
+          <div id="leafletMap" style="height:430px;width:100%;"></div>
+          <div style="padding:10px 16px;background:#f9f9f9;border-top:1px solid #eee;display:flex;gap:18px;flex-wrap:wrap">
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#C0392B;margin-right:5px"></span>Administración</span>
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#E67E22;margin-right:5px"></span>Facultades</span>
+            <span style="font-size:12px;color:#666"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27AE60;margin-right:5px"></span>Servicios</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="flex:1">
+        <div class="panel-header"><h3><i class="fas fa-route"></i> Calcular Ruta</h3></div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label>Desde</label>
+            <select class="form-control" id="desde"><option value="">Seleccione origen</option></select>
+          </div>
+          <div class="form-group">
+            <label>Hasta</label>
+            <select class="form-control" id="hasta"><option value="">Seleccione destino</option></select>
+          </div>
+          <button class="btn-primary w-full" id="calcularRutaBtn"><i class="fas fa-route"></i> Calcular Ruta</button>
+          <div class="ruta-result" id="rutaResult" style="display:none;margin-top:14px;background:var(--red-50);border:1px solid var(--red-300);border-radius:8px;padding:14px">
+            <h4 style="font-size:13px;font-weight:700;color:var(--red-700);margin-bottom:8px">Ruta encontrada:</h4>
+            <div class="ruta-path" id="rutaPath" style="font-size:13px;font-weight:600;color:var(--dark-800)"></div>
+            <div class="ruta-dist" id="rutaDist" style="font-size:12px;color:var(--gray-500);margin-top:6px"></div>
+          </div>
+          <div style="margin-top:14px">
+            <h4 style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--gray-700)">Puntos del campus</h4>
+            <div id="nodosList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODAL PERFIL -->
+<div class="modal-overlay" id="perfilModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-user-edit"></i> Mi Perfil</h3>
+      <button class="modal-close" id="perfilClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="width:72px;height:72px;background:var(--red-700);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;margin:0 auto 12px" id="perfilAvatar">E</div>
+        <div style="font-size:11px;color:#aaa">Haz clic en Guardar para actualizar tu información</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombres</label>
+          <input class="form-control" type="text" id="perfilNombres" placeholder="Nombres"/>
+        </div>
+        <div class="form-group">
+          <label>Apellidos</label>
+          <input class="form-control" type="text" id="perfilApellidos" placeholder="Apellidos"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Correo institucional <span style="color:#aaa;font-size:11px">(no editable)</span></label>
+        <input class="form-control" type="email" id="perfilEmail" disabled/>
+      </div>
+      <div class="form-group">
+        <label>Rol</label>
+        <input class="form-control" type="text" id="perfilRol" disabled/>
+      </div>
+      <div style="border-top:1px solid #EEE;margin:16px 0;padding-top:16px">
+        <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:12px">Cambiar contraseña (opcional)</div>
+        <div class="form-group">
+          <label>Nueva contraseña</label>
+          <input class="form-control" type="password" id="perfilPass1" placeholder="Dejar vacío para no cambiar"/>
+        </div>
+        <div class="form-group">
+          <label>Confirmar contraseña</label>
+          <input class="form-control" type="password" id="perfilPass2" placeholder="Repetir nueva contraseña"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" id="perfilCancelBtn">Cancelar</button>
+      <button class="btn-primary" id="perfilSaveBtn"><i class="fas fa-save"></i> Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GENÉRICO -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Modal</h3>
+      <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-outline" id="modalCancel">Cancelar</button>
+      <button class="btn-primary" id="modalConfirm">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/utils/structures.js"></script>
+<script src="../js/config/supabase-config.js"></script>
+<script src="../js/services/data.js"></script>
+<script src="../js/services/auth.js"></script>
+<script src="../js/utils/dashboard-utils.js"></script>
+<script src="../js/dashboards/campus-map.js"></script>
+<script src="../js/dashboards/estudiante-dashboard.js"></script>
+<script>
+// Inicializar fecha mínima - solo días laborables
+(function() {
+  const fc = document.getElementById('fechaCita');
+  if (!fc) return;
+  const hoy = new Date();
+  // Avanzar si es fin de semana
+  while (hoy.getDay() === 0 || hoy.getDay() === 6) hoy.setDate(hoy.getDate() + 1);
+  const min = hoy.toISOString().split('T')[0];
+  fc.min = min;
+  fc.value = min;
+  // Disparar actualización de horas
+  setTimeout(() => { if (window.actualizarHoras) actualizarHoras(); }, 300);
+})();
+</script>
+</body>
+</html>
